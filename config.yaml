@@ -1,0 +1,94 @@
+# Grobid Configuration
+grobid:
+  # Grobid服务地址（本地Docker或远程）
+  service_url: https://cloud.science-miner.com/grobid
+  # Grobid API超时时间（秒）
+  timeout: 60
+  # 批量处理时的最大重试次数
+  max_retries: 3
+  # 重试间隔（秒）
+  retry_delay: 2
+
+# LLM Configuration
+llm:
+  # 选择使用的LLM提供商: "openai" 或 "anthropic"
+  provider: "openai"
+  
+  # OpenAI配置
+  openai:
+    model: "gpt-4-turbo-preview"  # 或 "gpt-3.5-turbo"
+    temperature: 0.3
+    max_tokens: 2000
+    top_p: 0.9
+  
+  # Anthropic Claude配置
+  anthropic:
+    model: "claude-3-opus-20240229"  # 支持长上下文的模型
+    temperature: 0.3
+    max_tokens: 2000
+
+# Processing Steps Configuration
+processing:
+  # Step 2: 文本清理配置
+  cleaning:
+    # 是否移除参考文献符号 [1], [2]等
+    remove_citations: true
+    # 是否替换数学公式为 <EQ>
+    replace_math: true
+    # 是否移除图表引用
+    remove_figures: true
+  
+  # Step 3: 初始提取配置
+  extraction:
+    # 使用哪些文本部分进行初始提取
+    use_abstract: true
+    use_intro_end: true
+    use_conclusion: false  # Step 3中不用conclusion（避免循环）
+    # Introduction后1/3的定义（作为百分比）
+    intro_end_ratio: 0.33
+  
+  # Step 4: Refine配置
+  refine:
+    # 是否启用refine步骤
+    enabled: true
+    # Conclusion匹配的相似度阈值（0-1）
+    similarity_threshold: 0.5
+  
+  # Step 5: Fallback配置
+  fallback:
+    # 触发fallback的条件
+    enabled: true
+    # 当没有提取到足够的贡献点时触发
+    min_contributions: 3
+    # 当信心度低于此阈值时触发
+    confidence_threshold: 0.6
+    # Fallback时使用前几页（通常前10页包含Method开头）
+    pages_to_extract: 10
+
+# Logging Configuration
+logging:
+  # 日志级别: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  # 日志输出格式
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  # 日志文件路径
+  file: "output/logs/coreminer.log"
+  # 是否同时输出到控制台
+  console: true
+  # 日志文件最大大小（字节）
+  max_file_size: 10485760  # 10MB
+  # 保留的日志文件数量
+  backup_count: 5
+
+# File Paths
+paths:
+  input_dir: "input"
+  output_dir: "output"
+  results_dir: "output/results"
+  logs_dir: "output/logs"
+  temp_dir: "temp"
+
+# API Keys (通过环境变量覆盖)
+api_keys:
+  openai_key: ${OPENAI_API_KEY}
+  anthropic_key: ${ANTHROPIC_API_KEY}
