@@ -1,0 +1,60 @@
+{
+  "paper_title": "Invisible Injections: Unicode-based Adversarial Attacks on Tool-Integrated LLM Agents",
+  "validation_time": "2026-01-30T10:33:41.695613",
+  "ground_truth": {
+    "abstract": "As large language model (LLM) agents increasingly integrate sophisticated tool- use capabilities, their security boundaries are facing mounting challenges. Existing research on prompt injection has largely focused on overt textual perturbations, which are often readily detected by human reviewers or intercepted by rule- based filters. This paper introduces a new attack paradigm, Unicode- based Stealthy Injection (USI). USI exploits the perception- semantic gap between the human visual system and LLM tokenization: by crafting visually imperceptible or deceptive Unicode character sequences—such as Zero- width characters, invisible tag characters, homoglyphs, and bidirectional control characters—an attacker can inject malicious payloads into an agent while preserving the apparent visual consistency of the instruction.\n\nWe systematically define a threat model targeting tool- integrated agents, encompassing two attack vectors: prompt- marketplace poisoning and man- in- the- middle tool hijacking. By inserting or substituting specific Unicode sequences within instructions, an attacker can induce information leakage, denial of service (DoS), and content manipulation. We conduct extensive empirical evaluations across six mainstream agent frameworks (e.g., Claude Desktop, Cursor, Augment) and multiple state- of- the- art models. The results indicate that widely deployed models generally lack effective defenses against this class of attacks. For instance, a DoS attack leveraging Zero- width characters can cause system response latency to grow exponentially; semantic hijacking based on homoglyphs and hidden tags achieves an attack success rate (ASR) exceeding on certain models.\n\nTo mitigate this threat, we further propose a context- aware hybrid detection framework that combines a Unicode- oriented rulebased scanning engine with a fine- tuned semantic verification model. To improve robustness and reduce false positives, we construct a synthetic dataset containing both malicious injection samples and benign Unicode perturbations (negative samples) for fine- tuning. Finally, we perform a large- scale \"in- the- wild\" evaluation on 54,355 real- world instructions, successfully identifying 74 stealthy injection prompts with substantive harmful impact, thereby validating both the stealthiness of USI in practical settings and the effectiveness of our detection framework.",
+    "introduction_last_third": " strategy: To effectively defend against USI attacks, we propose a hybrid detection framework that combines rule-based scanning with semantic verification. We developed a scanning engine based on allowlists and introduced a Fine-tuning-based Detection Strategy.\n\n- Quantification of security risks using real-world data: We constructed and analyzed a corpus comprising 54,355 real-world instructions collected from GitHub, Reddit, and prompt-sharing platforms. Utilizing our detection framework, we identified and verified 74 instructions with substantive malicious intent from this massive dataset.",
+    "conclusion": null
+  },
+  "original_summary": "First, the paper introduces Unicode-based Stealthy Injection (USI), a novel attack paradigm that exploits the perception-semantic gap between human visual perception and LLM tokenization to inject malicious payloads via visually imperceptible Unicode characters—such as zero-width characters, homoglyphs, and bidirectional controls—while preserving instruction appearance. Through systematic evaluation across six major agent frameworks and state-of-the-art models, it demonstrates widespread vulnerability to USI, enabling successful attacks like denial-of-service with exponential latency growth and semantic hijacking with over 90% success rates on certain models. To counter this threat, the authors propose a context-aware hybrid detection framework combining a rule-based Unicode scanner with a fine-tuned semantic verifier, trained on a curated dataset of malicious and benign Unicode perturbations to minimize false positives. Finally, a large-scale analysis of 54,355 real-world instructions reveals 74 previously undetected harmful USI prompts, validating both the stealth and prevalence of the attack in practical settings.",
+  "original_validation": {
+    "is_valid": false,
+    "missing_points": [
+      "The paper does not mention specific success rates like over 90% for semantic hijacking.",
+      "The paper does not specify exponential latency growth for denial-of-service attacks."
+    ],
+    "unsupported_claims": [
+      "The summary claims semantic hijacking with over 90% success rates on certain models, which is not supported by the original text.",
+      "The summary claims denial-of-service with exponential latency growth, which is not specified in the original text."
+    ],
+    "critique": "The summary should remove specific success rates and latency growth claims as they are not supported by the original text. Additionally, it should focus more on the threat model and the specific attack vectors mentioned in the abstract, such as prompt-marketplace poisoning and man-in-the-middle tool hijacking. The summary should also emphasize the effectiveness of the detection framework as validated by the large-scale evaluation, rather than specific success rates or latency growth.",
+    "score": 3
+  },
+  "refinement_applied": true,
+  "refinement_iterations": [
+    {
+      "iteration": 1,
+      "summary": "This paper introduces Unicode-based Stealthy Injection (USI), a novel attack paradigm that exploits the perception-semantic gap between human visual perception and LLM tokenization to inject malicious payloads via visually imperceptible Unicode characters—such as zero-width characters, homoglyphs, and bidirectional controls—while preserving the apparent integrity of instructions. The authors define a comprehensive threat model targeting tool-integrated agents, encompassing two distinct attack vectors: prompt-marketplace poisoning and man-in-the-middle tool hijacking, which enable information leakage, denial-of-service, and content manipulation. To counter this threat, they propose a context-aware hybrid detection framework combining a rule-based Unicode scanner with a fine-tuned semantic verifier, trained on a curated dataset of malicious and benign Unicode perturbations to minimize false positives. A large-scale analysis of 54,355 real-world instructions from GitHub, Reddit, and prompt-sharing platforms successfully identifies 74 previously undetected harmful USI prompts, validating both the stealthiness of the attack and the effectiveness of the proposed defense in practical settings.",
+      "validation": {
+        "is_valid": false,
+        "missing_points": [
+          "The paper does not mention specific success rates like over 90% for semantic hijacking.",
+          "The paper does not specify exponential latency growth for denial-of-service attacks."
+        ],
+        "unsupported_claims": [
+          "The summary claims semantic hijacking with over 90% success rates on certain models, which is not supported by the original text.",
+          "The summary claims denial-of-service with exponential latency growth, which is not specified in the original text."
+        ],
+        "critique": "The summary should remove specific success rates and latency growth claims as they are not supported by the original text. Additionally, it should focus more on the threat model and the specific attack vectors mentioned in the abstract, such as prompt-marketplace poisoning and man-in-the-middle tool hijacking. The summary should also emphasize the effectiveness of the detection framework as validated by the large-scale evaluation, rather than specific success rates or latency growth.",
+        "score": 3
+      }
+    }
+  ],
+  "final_summary": "This paper introduces Unicode-based Stealthy Injection (USI), a novel attack paradigm that exploits the perception-semantic gap between human visual perception and LLM tokenization to inject malicious payloads via visually imperceptible Unicode characters—such as zero-width characters, homoglyphs, and bidirectional controls—while preserving the apparent integrity of instructions. The authors define a comprehensive threat model targeting tool-integrated agents, encompassing two distinct attack vectors: prompt-marketplace poisoning and man-in-the-middle tool hijacking, which enable information leakage, denial-of-service, and content manipulation. To counter this threat, they propose a context-aware hybrid detection framework combining a rule-based Unicode scanner with a fine-tuned semantic verifier, trained on a curated dataset of malicious and benign Unicode perturbations to minimize false positives. A large-scale analysis of 54,355 real-world instructions from GitHub, Reddit, and prompt-sharing platforms successfully identifies 74 previously undetected harmful USI prompts, validating both the stealthiness of the attack and the effectiveness of the proposed defense in practical settings.",
+  "final_validation": {
+    "is_valid": true,
+    "missing_points": [],
+    "unsupported_claims": [],
+    "critique": "The summary accurately reflects the key contributions and findings presented in the original text. It captures the introduction of the Unicode-based Stealthy Injection (USI) attack paradigm, the definition of the threat model, the proposed hybrid detection framework, and the results of the large-scale analysis. No significant omissions or hallucinations were detected.",
+    "score": 9
+  },
+  "total_iterations": 1,
+  "metadata": {
+    "model": "qwen3-next-80b-a3b-instruct",
+    "prompt_tokens": 969,
+    "completion_tokens": 206,
+    "refine_threshold": 8,
+    "max_iterations": 3,
+    "source_file": "extracted_result_20260130_103320.json"
+  }
+}

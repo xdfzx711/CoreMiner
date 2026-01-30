@@ -1,9 +1,9 @@
 """
 PDF处理工具
-处理PDF文件的验证、存储等操作
+处理PDF文件的验证等操作
 """
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 from src.utils.logger import get_logger
 
 
@@ -59,69 +59,6 @@ class PDFHandler:
             return False, f"无法读取PDF文件: {e}"
         
         return True, None
-    
-    @staticmethod
-    def get_pdf_files(directory: str) -> List[Path]:
-        """
-        获取目录中的所有PDF文件
-        
-        Args:
-            directory: 目录路径
-        
-        Returns:
-            PDF文件路径列表
-        """
-        dir_path = Path(directory)
-        
-        if not dir_path.exists():
-            logger.warning(f"目录不存在: {directory}")
-            return []
-        
-        if not dir_path.is_dir():
-            logger.warning(f"不是目录: {directory}")
-            return []
-        
-        pdf_files = list(dir_path.glob("*.pdf"))
-        logger.info(f"在 {directory} 中找到 {len(pdf_files)} 个PDF文件")
-        
-        return pdf_files
-    
-    @staticmethod
-    def copy_pdf(src_path: str, dest_path: str) -> bool:
-        """
-        复制PDF文件
-        
-        Args:
-            src_path: 源路径
-            dest_path: 目标路径
-        
-        Returns:
-            是否复制成功
-        """
-        try:
-            src = Path(src_path)
-            dest = Path(dest_path)
-            
-            # 验证源文件
-            is_valid, error = PDFHandler.validate_pdf(src_path)
-            if not is_valid:
-                logger.error(f"源文件验证失败: {error}")
-                return False
-            
-            # 创建目标目录
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            
-            # 复制文件
-            with open(src, "rb") as f_in:
-                with open(dest, "wb") as f_out:
-                    f_out.write(f_in.read())
-            
-            logger.info(f"PDF文件复制成功: {src_path} -> {dest_path}")
-            return True
-        
-        except Exception as e:
-            logger.error(f"复制PDF文件失败: {e}")
-            return False
     
     @staticmethod
     def get_pdf_info(pdf_path: str) -> dict:
