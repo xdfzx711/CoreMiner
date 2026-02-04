@@ -16,6 +16,7 @@ python-dateutil==2.8.2
 
 # Logging and utilities
 python-json-logger==2.0.7
+tqdm==4.66.1
 
 # Testing
 pytest==7.4.3

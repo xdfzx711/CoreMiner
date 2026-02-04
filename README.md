@@ -2,16 +2,7 @@
 
 基于深度学习的科技论文贡献总结自动生成系统。输入一篇AI学术论文的PDF，自动提取并生成其核心贡献的简洁摘要（3-5句话）。
 
-## 🎉 项目状态
 
-**当前版本**: v1.0 (Step 1-4 已完成)
-
-已完成的功能：
-- ✅ **Step 1**: PDF解析（支持DeepSeek-OCR）
-- ✅ **Step 2**: 结构化文本提取和清洗
-- ✅ **Step 3**: LLM核心贡献提取  
-- ✅ **Step 4**: 验证与优化（Refine + Validation）
-- ⏳ **Step 5**: Fallback策略（规划中）
 
 ## 系统架构
 
@@ -119,6 +110,8 @@ CoreMiner/
 
 ### 2. 安装依赖
 ```bash
+conda create -n coreminer python=3.10
+conda activate coreminer
 pip install -r requirements.txt
 ```
 
@@ -151,8 +144,6 @@ Refine_MODEL=" "
 ```
 
 
-
-### 4. 配置文件
 
 编辑 `config.yaml` 根据需要调整：
 
@@ -215,7 +206,7 @@ logging:
 3. **编辑 `src/main.py` 配置输入文件路径**
    ```python
    # Step 2配置
-   mmd_file = Path(r"D:\pythonproject\CoreMiner\DeepSeek-OCR\output\your_paper.mmd")
+   mmd_file = Path(r"Your Path")
    ```
 
 4. **运行完整流程**
