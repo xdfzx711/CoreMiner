@@ -144,46 +144,6 @@ Refine_MODEL=" "
 ```
 
 
-
-编辑 `config.yaml` 根据需要调整：
-
-```yaml
-# LLM Configuration
-llm:
-  provider: "openai"  # 或 "anthropic"
-  
-  openai:
-    model: "gpt-4-turbo-preview"
-    temperature: 0.3
-    max_tokens: 2000
-  
-  anthropic:
-    model: "claude-3-opus-20240229"
-    temperature: 0.3
-    max_tokens: 2000
-
-# Processing Steps Configuration
-processing:
-  cleaning:
-    remove_citations: true      # 移除引用符号
-    replace_math: true          # 替换数学公式
-    remove_figures: true        # 移除图表引用
-  
-  refine:
-    enabled: true               # 启用refine步骤
-    similarity_threshold: 0.5   # 相似度阈值
-    max_iterations: 3           # 最大迭代次数
-    refine_threshold: 8         # 触发优化的分数阈值
-
-# Logging Configuration
-logging:
-  level: "INFO"
-  file: "output/logs/coreminer.log"
-  console: true
-  max_file_size: 10485760      # 10MB
-  backup_count: 5
-```
-
 ## 使用方法
 
 ### 快速开始 - 完整流程（Step 1-4）
