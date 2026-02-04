@@ -16,6 +16,38 @@ class FileHandler:
     """文件操作处理类"""
     
     @staticmethod
+    def sanitize_title(title: str, max_length: int = 80) -> str:
+        """
+        将论文标题转换为安全的文件名
+        
+        Args:
+            title: 原始论文标题
+            max_length: 最大文件名长度
+        
+        Returns:
+            清理后的安全文件名
+        """
+        import re
+        
+        if not title or title == 'Unknown Title':
+            return None
+        
+        # 移除特殊字符: < > : " / \ | ? * 和换行符
+        sanitized = re.sub(r'[<>:"/\\|?*\r\n]', '', title)
+        
+        # 替换空格和多个空白为单个下划线
+        sanitized = re.sub(r'\s+', '_', sanitized)
+        
+        # 移除首尾的下划线和点号
+        sanitized = sanitized.strip('_.')
+        
+        # 限制长度
+        if len(sanitized) > max_length:
+            sanitized = sanitized[:max_length].rstrip('_.')
+        
+        return sanitized if sanitized else None
+    
+    @staticmethod
     def load_config(config_path: str = "config.yaml") -> Dict[str, Any]:
         """
         加载YAML配置文件

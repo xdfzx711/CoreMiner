@@ -335,7 +335,8 @@ def validate_and_refine(
 
 def save_refine_record(
     record: RefineRecord,
-    output_dir: str = "output/refine_results"
+    output_dir: str = "output/refine_results",
+    paper_title: str = None
 ) -> Path:
     """
     保存验证记录到JSON文件
@@ -343,18 +344,27 @@ def save_refine_record(
     Args:
         record: RefineRecord对象
         output_dir: 输出目录路径
+        paper_title: 论文标题(可选,用于生成文件名)
         
     Returns:
         Path: 保存的文件路径
     """
+    from src.utils.file_handler import FileHandler
+    
     # 创建输出目录
     project_root = Path(__file__).parent.parent.parent
     output_path = project_root / output_dir
     output_path.mkdir(parents=True, exist_ok=True)
     
-    # 生成文件名（使用时间戳）
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"refine_record_{timestamp}.json"
+    # 生成文件名 - 优先使用论文标题
+    sanitized_title = FileHandler.sanitize_title(paper_title) if paper_title else None
+    
+    if sanitized_title:
+        filename = f"refine_record_{sanitized_title}.json"
+    else:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"refine_record_{timestamp}.json"
+    
     file_path = output_path / filename
     
     # 保存JSON
