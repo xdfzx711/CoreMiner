@@ -2,202 +2,332 @@
 
 基于深度学习的科技论文贡献总结自动生成系统。输入一篇AI学术论文的PDF，自动提取并生成其核心贡献的简洁摘要（3-5句话）。
 
+## 🎉 项目状态
+
+**当前版本**: v1.0 (Step 1-4 已完成)
+
+已完成的功能：
+- ✅ **Step 1**: PDF解析（支持DeepSeek-OCR）
+- ✅ **Step 2**: 结构化文本提取和清洗
+- ✅ **Step 3**: LLM核心贡献提取  
+- ✅ **Step 4**: 验证与优化（Refine + Validation）
+- ⏳ **Step 5**: Fallback策略（规划中）
+
 ## 系统架构
 
-### 5个处理步骤
+### 完整的处理流程（4个步骤）
 
 ```
-PDF/文本输入 
+PDF文件输入 
   ↓
-[Step 1] PDF解析 (Grobid)
+[Step 1] PDF解析 (DeepSeek-OCR)
+  ├─ PDF → Markdown转换
+  └─ 输出: .mmd文件
   ↓
-[Step 2] 结构化提取 + 去噪
+[Step 2] 结构化提取 + 清洗
+  ├─ 提取：Abstract、Introduction后1/3、Conclusion
+  ├─ 清洗：移除引用、公式、图表引用等
+  └─ 输出: clean_results/*.json
   ↓
-[Step 3] LLM提取贡献点（第1次调用）
+[Step 3] LLM提取贡献（第1次调用）
+  ├─ 使用清洗后的文本
+  ├─ LLM API调用（OpenAI/Anthropic）
+  └─ 输出: llm_results/*.json
   ↓
-[Step 4] Refine验证（第2次调用）
-  ↓
-[Step 5] Fallback（长文本深度阅读，如需要）
+[Step 4] 验证与优化（第2次调用）
+  ├─ Validator: 验证摘要质量（评分0-10）
+  ├─ Refiner: 根据批评意见优化摘要
+  ├─ 迭代优化（最多3轮）
+  └─ 输出: refine_results/*.json
   ↓
 最终贡献摘要输出
 ```
 
-### 模块说明
 
-#### Step 1: PDF解析
-- **grobid_parser.py**: 调用Grobid服务解析PDF为XML/JSON，提取标题、摘要、作者等元数据
-- **pdf_handler.py**: PDF文件验证、信息获取等工具
-
-#### Step 2: 文本提取和清理
-- **structure_extractor.py**: 从Grobid XML中提取Abstract、Introduction末尾1/3、Conclusion
-- **text_cleaner.py**: 去噪处理（移除引用符号`[1]`、替换公式为`<EQ>`、移除图表引用等）
-
-#### Step 3: LLM提取贡献
-- **llm_client.py**: 统一的LLM接口（支持OpenAI、Claude等）
-- **contribution_extractor.py**: 调用LLM进行第一次贡献提取
-
-#### Step 4: Refine验证
-- **refine_validator.py**: 检查提取的贡献点是否在Conclusion中得到呼应
-- **refiner.py**: 调用LLM进行第二次修正
-
-#### Step 5: Fallback策略
-- **long_text_reader.py**: 调用支持长上下文的模型
-- **fallback_handler.py**: 判断是否触发fallback，处理异常情况
 
 ## 项目结构
 
 ```
 CoreMiner/
-├── README.md                          # 项目文档
+├── README.md                          # 项目文档（本文件）
 ├── requirements.txt                   # Python依赖
-├── config.yaml                        # 配置文件
+├── config.yaml                        # 全局配置文件
+├── .env                               # API密钥（需自行创建）
+│
+├── docs/                              # 文档目录
+│   ├── 00_START_HERE.md              # 快速入门
+│   └── STEP2_GUIDE.md                # Step2详细文档
 │
 ├── input/
 │   └── sample_papers/                 # 输入PDF文件夹
 │
 ├── output/
-│   ├── results/                       # 最终结果
+│   ├── clean_results/                 # Step2清洗结果 (JSON)
+│   ├── llm_results/                   # Step3提取结果 (JSON)
+│   ├── refine_results/                # Step4优化结果 (JSON)
 │   └── logs/                          # 执行日志
 │
-├── src/
-│   ├── step1_pdf_parsing/             # Step 1: PDF解析
-│   ├── step2_extraction_cleaning/     # Step 2: 提取+去噪
-│   ├── step3_llm_extraction/          # Step 3: LLM提取
-│   ├── step4_refine/                  # Step 4: Refine
-│   ├── step5_fallback/                # Step 5: Fallback
-│   ├── utils/                         # 通用工具
-│   └── main.py                        # 主入口脚本
+├── DeepSeek-OCR/                      # DeepSeek-OCR子项目
+│   ├── output/                        # Step1输出 (.mmd文件)
+│   └── DeepSeek-OCR-master/          # OCR核心代码
 │
-└── tests/                             # 单元测试
-    └── fixtures/                      # 测试数据
+├── src/                               # 源代码
+│   ├── main.py                        # 主入口（Step1-4完整流程）
+│   │
+│   ├── step1_pdf_parsing/             # ✅ Step1: PDF解析
+│   │   ├── __init__.py
+│   │   ├── deepseek_parser.py        # DeepSeek-OCR解析器
+│   │   └── pdf_handler.py            # PDF工具
+│   │
+│   ├── step2_text_extraction/         # ✅ Step2: 提取+清洗
+│   │   ├── __init__.py
+│   │   ├── structure_extractor.py    # 文档结构提取
+│   │   ├── text_cleaner.py           # 文本清洗
+│   │   └── text_extractor.py         # 提取流程整合
+│   │
+│   ├── step3_llm_extraction/          # ✅ Step3: LLM提取
+│   │   ├── __init__.py
+│   │   ├── main.py                   # 主流程
+│   │   └── data_models.py            # 数据模型
+│   │
+│   ├── step4_refine/                  # ✅ Step4: 验证优化
+│   │   ├── __init__.py
+│   │   ├── refine_validator.py       # 验证器
+│   │   └── refiner.py                # 优化器
+│   │
+│   └── utils/                         # 通用工具
+│       ├── __init__.py
+│       ├── data_models.py            # 核心数据模型
+│       ├── file_handler.py           # 文件操作
+│       └── logger.py                 # 日志系统
+│
+└── tests/                             # 测试代码
+    ├── __init__.py
+    ├── test_step1.py                 # Step1测试
+    ├── test_step2.py                 # Step2测试
+    ├── test_step3.py                 # Step3测试
+    ├── test_step4_validator.py       # Step4验证器测试
+    ├── test_step4_refine.py          # Step4优化器测试
+    └── fixtures/                     # 测试数据
 ```
 
 ## 安装和设置
 
 ### 1. 环境要求
 - Python 3.9+
-- Docker (用于运行Grobid)
+- DeepSeek-OCR环境（用于PDF解析）,参考项目：[DeepSeek-OCR](https://github.com/deepseek-ai/DeepSeek-OCR)
 
 ### 2. 安装依赖
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. 启动Grobid服务
+主要依赖包括：
+- `openai==1.3.9` - OpenAI API客户端
+- `anthropic==0.7.8` - Anthropic Claude API客户端  
+- `pydantic==2.5.3` - 数据验证和模型
+- `pyyaml>=6.0.1` - 配置文件解析
+- `python-dotenv==1.0.0` - 环境变量管理
+- `requests==2.31.0` - HTTP请求
 
-使用Docker启动本地Grobid服务：
-```bash
-docker pull grobid/grobid:0.7.3
-docker run -t --rm -p 8070:8070 grobid/grobid:0.7.3
-```
-
-或者使用remote Grobid服务（如 https://cloud.science-miner.com/grobid/）
-
-### 4. 配置API密钥
+### 3. 配置API密钥
 
 在项目根目录创建 `.env` 文件：
 ```bash
-OPENAI_API_KEY=your_openai_key_here
-ANTHROPIC_API_KEY=your_anthropic_key_here
+# Step3 LLM提取配置
+Generate_API_KEY="Your_API_Key"
+Generate_API_URL=" "
+Generate_MODEL=" "
+
+# Step4 验证器配置  
+JUDGE_API_KEY="Your_API_Key"
+JUDGE_API_URL=" "
+JUDGE_MODEL=" "
+
+# Step4 优化器配置
+Refine_API_KEY="Your_API_Key"
+Refine_API_URL=" "
+Refine_MODEL=" "
 ```
 
-### 5. 配置文件
+
+
+### 4. 配置文件
 
 编辑 `config.yaml` 根据需要调整：
-- Grobid服务地址
-- LLM提供商和模型
-- 处理参数
-- 日志配置等
 
-## 使用方法
-
-### 快速开始 - Step 1: PDF解析
-
-1. **将PDF文件放入** `input/sample_papers/` 文件夹
-
-2. **运行Step 1解析脚本**
-```bash
-python src/main.py
-```
-
-脚本会：
-- 验证PDF文件
-- 调用Grobid解析PDF
-- 提取标题、作者、摘要、全文
-- 保存结果到 `output/results/`
-
-### 输出格式
-
-解析结果以JSON格式保存，包含：
-```json
-{
-  "success": true,
-  "pdf_path": "input/sample_papers/example.pdf",
-  "title": "论文标题",
-  "authors": ["作者1", "作者2"],
-  "abstract": "论文摘要内容...",
-  "text": "完整论文文本...",
-  "xml": "<TEI XML content>"
-}
-```
-
-## 配置参数详解
-
-### Grobid配置 (config.yaml)
 ```yaml
-grobid:
-  service_url: http://localhost:8070    # Grobid服务地址
-  timeout: 60                            # 请求超时（秒）
-  max_retries: 3                         # 最大重试次数
-  retry_delay: 2                         # 重试间隔（秒）
-```
-
-### LLM配置 (config.yaml)
-```yaml
+# LLM Configuration
 llm:
-  provider: "openai"                     # 选择提供商
+  provider: "openai"  # 或 "anthropic"
+  
   openai:
     model: "gpt-4-turbo-preview"
     temperature: 0.3
     max_tokens: 2000
+  
   anthropic:
     model: "claude-3-opus-20240229"
     temperature: 0.3
     max_tokens: 2000
+
+# Processing Steps Configuration
+processing:
+  cleaning:
+    remove_citations: true      # 移除引用符号
+    replace_math: true          # 替换数学公式
+    remove_figures: true        # 移除图表引用
+  
+  refine:
+    enabled: true               # 启用refine步骤
+    similarity_threshold: 0.5   # 相似度阈值
+    max_iterations: 3           # 最大迭代次数
+    refine_threshold: 8         # 触发优化的分数阈值
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  file: "output/logs/coreminer.log"
+  console: true
+  max_file_size: 10485760      # 10MB
+  backup_count: 5
 ```
 
-## 日志
+## 使用方法
 
-日志文件位置: `output/logs/coreminer.log`
+### 快速开始 - 完整流程（Step 1-4）
 
-日志级别: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+#### 前置步骤：准备输入文件
 
-## 故障排除
+1. **准备PDF文件**  
+   将论文PDF放入 `DeepSeek-OCR/` 目录
 
-### Grobid连接失败
-- 检查Grobid服务是否运行: `curl http://localhost:8070/api/isalive`
-- 验证config.yaml中的service_url是否正确
+2. **使用DeepSeek-OCR解析PDF（Step 1）**
+   ```bash
+   cd DeepSeek-OCR/DeepSeek-OCR-master/DeepSeek-OCR-vllm
+   python run_dpsk_ocr_pdf.py --pdf_path <your_pdf_path>
+   ```
+   
+   输出: `.mmd` 文件保存在 `DeepSeek-OCR/output/` 目录
 
-### PDF解析失败
-- 检查PDF文件是否有效（魔术数字检查）
-- 确认PDF文件大小 < 100MB
-- 查看日志了解具体错误
+#### 运行主流程（Step 2-4）
 
-### API密钥错误
-- 确认.env文件中的密钥正确
-- 检查API额度是否足够
+3. **编辑 `src/main.py` 配置输入文件路径**
+   ```python
+   # Step 2配置
+   mmd_file = Path(r"D:\pythonproject\CoreMiner\DeepSeek-OCR\output\your_paper.mmd")
+   ```
 
-## 下一步
+4. **运行完整流程**
+   ```bash
+   python src/main.py
+   ```
 
-当Step 1完成后，将继续实现：
-- Step 2: 结构化文本提取和去噪
-- Step 3: LLM贡献提取
-- Step 4: Refine验证
-- Step 5: Fallback策略
+流程执行：
+- **Step 2**: 结构化提取和清洗
+  - 输入: `.mmd` 文件
+  - 输出: `output/clean_results/extracted_result_*.json`
+  
+- **Step 3**: LLM提取核心贡献
+  - 输入: Step2的清洗结果
+  - 输出: `output/llm_results/core_contributions_*.json`
+  
+- **Step 4**: 验证和优化
+  - 输入: Step2原文 + Step3摘要
+  - 输出: `output/refine_results/refine_record_*.json`
+
+### 输出格式
+
+#### Step 2输出示例 (extracted_result_*.json)
+```json
+{
+  "source_file": "paper.mmd",
+  "title": "论文标题",
+  "original": {
+    "abstract": "原始摘要...",
+    "introduction_1_3": "引言后1/3...",
+    "conclusion": "结论..."
+  },
+  "cleaned": {
+    "abstract": "清洗后的摘要...",
+    "introduction_1_3": "清洗后的引言...",
+    "conclusion": "清洗后的结论..."
+  },
+  "stats": {
+    "abstract": {"citations_removed": 10, "formulas_replaced": 5}
+  }
+}
+```
+
+#### Step 3输出示例 (core_contributions_*.json)
+```json
+{
+  "source_file": "extracted_result_*.json",
+  "title": "论文标题",
+  "contributions_summary": "This paper introduces... [3-5句话的贡献摘要]",
+  "model_used": "gpt-4-turbo-preview",
+  "prompt_tokens": 1500,
+  "completion_tokens": 200,
+  "extraction_timestamp": "2026-01-30T10:33:25"
+}
+```
+
+#### Step 4输出示例 (refine_record_*.json)
+```json
+{
+  "paper_title": "论文标题",
+  "original_summary": "初始摘要...",
+  "original_validation": {
+    "is_valid": false,
+    "score": 6,
+    "missing_points": ["缺失的贡献点1", "缺失的贡献点2"],
+    "unsupported_claims": ["无依据的声称1"],
+    "critique": "详细的批评意见..."
+  },
+  "refinement_applied": true,
+  "refinement_iterations": [
+    {
+      "iteration": 1,
+      "summary": "第1次优化后的摘要...",
+      "validation": {"score": 7, ...}
+    },
+    {
+      "iteration": 2,
+      "summary": "第2次优化后的摘要...",
+      "validation": {"score": 9, ...}
+    }
+  ],
+  "final_summary": "最终优化后的摘要...",
+  "final_validation": {
+    "is_valid": true,
+    "score": 9,
+    "missing_points": [],
+    "unsupported_claims": []
+  },
+  "total_iterations": 2
+}
+```
+
+
+
+## 贡献指南
+
+欢迎提交Issue和Pull Request！
+
+开发建议：
+1. Fork本仓库
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启Pull Request
 
 ## 许可证
 
 MIT License
+
+## 联系方式
+
+如有问题或建议，请通过Issue反馈。
 
 ## 联系方式
 
