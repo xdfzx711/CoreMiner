@@ -1,9 +1,0 @@
-{
-  "source_file": "Invisible Injections: Unicode-based Adversarial Attacks on Tool-Integrated LLM Agents",
-  "title": "Invisible Injections: Unicode-based Adversarial Attacks on Tool-Integrated LLM Agents",
-  "contributions_summary": "First, the paper introduces Unicode-based Stealthy Injection (USI), a novel attack paradigm that exploits the perception-semantic gap in LLMs by leveraging visually imperceptible Unicode characters—such as zero-width characters, homoglyphs, and bidirectional controls—to inject malicious payloads while preserving innocent visual appearance. Through a rigorously defined threat model targeting tool-integrated agents, it demonstrates widespread vulnerabilities across six major frameworks, enabling successful prompt poisoning and man-in-the-middle tool hijacking that induce denial-of-service and semantic hijacking with high attack success rates. To counter this threat, the authors propose a context-aware hybrid detection framework combining rule-based Unicode scanning with a fine-tuned semantic verifier, trained on a curated dataset of benign and malicious perturbations to minimize false positives. Finally, by analyzing 54,355 real-world instructions from public platforms, they validate both the stealth and prevalence of USI in practice, uncovering 74 substantively harmful injections that evade conventional defenses.",
-  "extraction_timestamp": "2026-02-04T09:04:27.707363",
-  "model_used": "qwen3-next-80b-a3b-instruct",
-  "prompt_tokens": 1189,
-  "completion_tokens": 201
-}

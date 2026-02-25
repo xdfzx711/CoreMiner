@@ -1,0 +1,9 @@
+{
+  "source_file": "Invisible Injections: Unicode-Based Adversarial Attacks on Tool-Integrated LLM Agents",
+  "title": "Invisible Injections: Unicode-Based Adversarial Attacks on Tool-Integrated LLM Agents",
+  "contributions_summary": "The paper introduces Ghost Prompt Injection (GPI), a novel attack paradigm that exploits Unicode anomalies—such as invisible tag characters, homoglyphs, and bidirectional control characters—to create visually benign yet malicious prompts that hijack tool-integrated LLM agents by exploiting the perception-semantic gap between human vision and machine tokenization. To counter this threat, the authors propose GPIGuard, a hybrid detection framework that combines deterministic codepoint-level sanitization with a fine-tuned LLM-based semantic verifier, effectively distinguishing malicious payloads from legitimate multilingual inputs while minimizing false positives. Through extensive evaluation on real-world instructions and major agent platforms, they demonstrate widespread vulnerabilities, including latency spikes up to 262 seconds and 60–80% success rates for BIDI-based attacks, and identify 74 active malicious samples in open ecosystems, establishing GPIGuard as a critical, empirically validated defense baseline against imperceptible prompt injection threats.",
+  "extraction_timestamp": "2026-02-08T04:36:18.779332",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 1147,
+  "completion_tokens": 189
+}

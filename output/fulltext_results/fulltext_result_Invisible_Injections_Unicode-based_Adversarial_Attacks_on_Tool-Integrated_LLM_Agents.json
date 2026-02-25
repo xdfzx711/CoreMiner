@@ -1,0 +1,11 @@
+{
+  "source_file": "UnicodeInjection.mmd",
+  "title": "Invisible Injections: Unicode-based Adversarial Attacks on Tool-Integrated LLM Agents",
+  "contributions_summary": "This paper introduces Unicode-based Stealthy Injection (USI), a novel adversarial attack paradigm that exploits the perception-semantic gap between human visual rendering and LLM tokenization to inject malicious payloads via invisible Unicode characters—such as zero-width characters, homoglyphs, tag characters, and bidirectional controls—while preserving the visual appearance of benign instructions. Through systematic evaluation across six major agent frameworks and state-of-the-art models, the authors demonstrate widespread vulnerability, achieving attack success rates exceeding 85% for semantic hijacking and inducing exponential latency spikes via context-window exhaustion. To counter this threat, they propose GPIGuard, a context-aware hybrid detection framework combining a rule-based Unicode codepoint scanner with a fine-tuned semantic verification model trained on a synthetic dataset of malicious and benign Unicode perturbations, which successfully identifies 74 harmful injections among 54,355 real-world prompts, validating both the stealth and prevalence of USI in practical deployments.",
+  "extraction_timestamp": "2026-02-08T03:49:34.759511",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 20335,
+  "completion_tokens": 194,
+  "input_length": 85878,
+  "preprocessing_mode": "none"
+}

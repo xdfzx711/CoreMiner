@@ -56,7 +56,7 @@ class StructureExtractor:
         # 提取各个部分
         abstract = self._extract_section(text, r"^#+\s+Abstract", keep_header=False)
         introduction = self._extract_section(text, r"^#+\s+(?:1\s+)?Introduction", keep_header=False)
-        conclusion = self._extract_section(text, r"^#+\s+(?:10\s+)?Conclusion", keep_header=False)
+        conclusion = self._extract_conclusion(text)
         
         # 计算Introduction的1/3位置
         intro_1_3_info = self._calculate_intro_1_3(introduction) if introduction else None
@@ -97,6 +97,49 @@ class StructureExtractor:
         match = re.search(r"^#\s+(.+?)$", text, re.MULTILINE)
         if match:
             return match.group(1).strip()
+        return None
+    
+    def _extract_conclusion(self, text: str) -> Optional[str]:
+        """
+        提取Conclusion部分
+        支持两种形式：
+        1. 独立章节标题形式：## Conclusion 或 ## 10 Conclusion
+        2. 段落开头形式：Conclusion. （通常在Discussion章节内）
+        
+        Args:
+            text: 完整文本
+        
+        Returns:
+            Conclusion内容，如果未找到则返回None
+        """
+        # 方法1: 尝试提取标题形式的Conclusion
+        conclusion = self._extract_section(text, r"^#+\s+(?:\d+\s+)?Conclusion", keep_header=False)
+        
+        if conclusion:
+            logger.debug("找到标题形式的Conclusion")
+            return conclusion
+        
+        # 方法2: 查找段落开头形式的Conclusion
+        # 通常出现在Discussion章节内，以"Conclusion."开头
+        pattern = r"(?:^|\n)Conclusion\.\s+(.+?)(?=\n\n|<---|$)"
+        match = re.search(pattern, text, re.MULTILINE | re.DOTALL)
+        
+        if match:
+            conclusion_text = "Conclusion. " + match.group(1).strip()
+            logger.debug("找到段落形式的Conclusion")
+            return conclusion_text
+        
+        # 方法3: 更宽松的匹配 - 查找Discussion章节中的Conclusion段落
+        discussion = self._extract_section(text, r"^#+\s+(?:\d+\s+)?Discussion", keep_header=False)
+        if discussion:
+            # 在Discussion中查找Conclusion段落
+            conclusion_match = re.search(r"Conclusion\.\s+(.+?)(?=\n\n|$)", discussion, re.DOTALL)
+            if conclusion_match:
+                conclusion_text = "Conclusion. " + conclusion_match.group(1).strip()
+                logger.debug("在Discussion章节中找到Conclusion段落")
+                return conclusion_text
+        
+        logger.debug("未找到Conclusion")
         return None
     
     def _extract_section(self, text: str, section_pattern: str, keep_header: bool = False) -> Optional[str]:
