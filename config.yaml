@@ -92,3 +92,35 @@ paths:
 api_keys:
   openai_key: ${OPENAI_API_KEY}
   anthropic_key: ${ANTHROPIC_API_KEY}
+
+# Evaluation Configuration
+evaluation:
+  # 标题匹配相似度阈值
+  title_similarity_threshold: 0.85
+  
+  # ROUGE配置
+  rouge:
+    # 是否使用词干提取
+    use_stemmer: true
+    # 语言设置
+    language: "english"
+    # 评估的指标
+    metrics:
+      - rouge1
+      - rouge2
+      - rougeL
+  
+  # BERTScore配置（待实现）
+  bertscore:
+    enabled: false
+    model: "microsoft/deberta-xlarge-mnli"
+    batch_size: 8
+  
+  # 可视化配置
+  visualization:
+    # 图表DPI
+    dpi: 300
+    # 图表格式
+    format: "png"
+    # 是否生成所有图表
+    generate_all: true
