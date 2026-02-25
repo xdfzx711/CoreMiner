@@ -30,7 +30,7 @@ class DeepSeekOCRParser:
         """
         if deepseek_ocr_path is None:
             # 默认路径
-            deepseek_ocr_path = r"D:\pythonproject\CoreMiner\DeepSeek-OCR\DeepSeek-OCR-master\DeepSeek-OCR-vllm"
+            deepseek_ocr_path = r"/home/ubuntu/pythonproject/CoreMiner/DeepSeek-OCR/DeepSeek-OCR-master/DeepSeek-OCR-vllm"
         
         self.deepseek_ocr_path = Path(deepseek_ocr_path)
         self.model_path = model_path
@@ -49,20 +49,30 @@ class DeepSeekOCRParser:
         logger.info(f"运行脚本: {self.run_script}")
     
     def parse_pdf(self, 
-                  pdf_path: str,
+                  pdf_path: str = None,
                   output_dir: str = None,
                   prompt: str = None) -> Dict[str, Any]:
         """
         解析PDF文件
         
         Args:
-            pdf_path: PDF文件路径
+            pdf_path: PDF文件路径（可选，如果不指定则从config.py读取INPUT_PATH）
             output_dir: 输出目录（可选，如果不指定则由DeepSeek OCR使用默认路径）
             prompt: OCR提示词
         
         Returns:
             包含解析结果的字典
         """
+        # 如果未提供pdf_path，从config.py读取
+        if pdf_path is None:
+            config_vars = {}
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                exec(f.read(), config_vars)
+            pdf_path = config_vars.get('INPUT_PATH', '')
+            if not pdf_path:
+                raise ValueError("pdf_path未提供，且config.py中INPUT_PATH为空")
+            logger.info(f"从config.py读取PDF路径: {pdf_path}")
+        
         pdf_path = Path(pdf_path)
         
         if not pdf_path.exists():
@@ -128,15 +138,19 @@ class DeepSeekOCRParser:
             
             # 修改INPUT_PATH和OUTPUT_PATH
             new_lines = []
-            for line in lines:
+            i = 0
+            while i < len(lines):
+                line = lines[i]
                 if line.strip().startswith('INPUT_PATH ='):
                     new_lines.append(f"INPUT_PATH = '{input_path}'\n")
                 elif line.strip().startswith('OUTPUT_PATH ='):
                     new_lines.append(f"OUTPUT_PATH = '{output_path}'\n")
                 elif line.strip().startswith('PROMPT ='):
-                    new_lines.append(f"PROMPT = '{prompt}'\n")
+                    # 使用repr来正确转义包含换行符的字符串
+                    new_lines.append(f"PROMPT = {repr(prompt)}\n")
                 else:
                     new_lines.append(line)
+                i += 1
             
             # 写回config.py
             with open(self.config_file, 'w', encoding='utf-8') as f:

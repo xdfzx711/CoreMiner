@@ -221,27 +221,29 @@ Please output the core contribution summary directly in English, without repeati
 class Step3Pipeline:
     """Step3处理流程"""
     
-    def __init__(self, config: ExtractionConfig, results_dir: str = None):
-        """初始化Pipeline"""
-        if results_dir is None:
-            results_dir = os.path.join(os.getcwd(), 'output', 'results')
+    def __init__(self, config: ExtractionConfig, input_file: str):
+        """初始化Pipeline
         
-        self.results_dir = results_dir
+        Args:
+            config: LLM配置
+            input_file: Step2输出的JSON文件路径
+        """
+        self.input_file = input_file
         self.config = config
         self.llm_extractor = LLMExtractor(config)
     
     def run(self) -> CoreContribution:
         """运行完整的处理流程"""
         try:
-            # 第一步：获取最新的结果文件
+            # 第一步：验证输入文件存在
             logger.info("Step3: 开始处理")
-            result_file = FileHandler.get_latest_result_file(self.results_dir)
+            if not os.path.exists(self.input_file):
+                raise FileNotFoundError(f"输入文件不存在: {self.input_file}")
             
-            if not result_file:
-                raise RuntimeError("无法找到结果文件")
+            logger.info(f"处理文件: {self.input_file}")
             
             # 第二步：加载论文内容
-            paper_data = FileHandler.load_paper_content(result_file)
+            paper_data = FileHandler.load_paper_content(self.input_file)
             
             # 第三步：提取论文各部分
             paper_content = TextExtractor.extract_paper_sections(paper_data)
@@ -255,6 +257,47 @@ class Step3Pipeline:
         except Exception as e:
             logger.error(f"Step3处理失败: {e}")
             raise
+    
+    @staticmethod
+    def save_contribution(contribution: CoreContribution, output_dir: str, paper_title: str = None) -> str:
+        """
+        保存核心贡献到JSON文件
+        
+        Args:
+            contribution: CoreContribution对象
+            output_dir: 输出目录
+            paper_title: 论文标题(可选,用于生成文件名)
+        
+        Returns:
+            保存的文件路径
+        """
+        from src.utils.file_handler import FileHandler
+        
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        # 生成文件名 - 优先使用论文标题
+        sanitized_title = FileHandler.sanitize_title(paper_title) if paper_title else None
+        
+        if sanitized_title:
+            filename = f"core_contributions_{sanitized_title}.json"
+        else:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"core_contributions_{timestamp}.json"
+        
+        file_path = output_path / filename
+        
+        # 保存JSON
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(
+                contribution.to_dict(),
+                f,
+                ensure_ascii=False,
+                indent=2
+            )
+        
+        logger.info(f"核心贡献已保存: {file_path}")
+        return str(file_path)
 
 
 def load_config_from_env() -> ExtractionConfig:

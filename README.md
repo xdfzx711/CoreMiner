@@ -2,16 +2,7 @@
 
 基于深度学习的科技论文贡献总结自动生成系统。输入一篇AI学术论文的PDF，自动提取并生成其核心贡献的简洁摘要（3-5句话）。
 
-## 🎉 项目状态
 
-**当前版本**: v1.0 (Step 1-4 已完成)
-
-已完成的功能：
-- ✅ **Step 1**: PDF解析（支持DeepSeek-OCR）
-- ✅ **Step 2**: 结构化文本提取和清洗
-- ✅ **Step 3**: LLM核心贡献提取  
-- ✅ **Step 4**: 验证与优化（Refine + Validation）
-- ⏳ **Step 5**: Fallback策略（规划中）
 
 ## 系统架构
 
@@ -119,6 +110,8 @@ CoreMiner/
 
 ### 2. 安装依赖
 ```bash
+conda create -n coreminer python=3.10
+conda activate coreminer
 pip install -r requirements.txt
 ```
 
@@ -151,48 +144,6 @@ Refine_MODEL=" "
 ```
 
 
-
-### 4. 配置文件
-
-编辑 `config.yaml` 根据需要调整：
-
-```yaml
-# LLM Configuration
-llm:
-  provider: "openai"  # 或 "anthropic"
-  
-  openai:
-    model: "gpt-4-turbo-preview"
-    temperature: 0.3
-    max_tokens: 2000
-  
-  anthropic:
-    model: "claude-3-opus-20240229"
-    temperature: 0.3
-    max_tokens: 2000
-
-# Processing Steps Configuration
-processing:
-  cleaning:
-    remove_citations: true      # 移除引用符号
-    replace_math: true          # 替换数学公式
-    remove_figures: true        # 移除图表引用
-  
-  refine:
-    enabled: true               # 启用refine步骤
-    similarity_threshold: 0.5   # 相似度阈值
-    max_iterations: 3           # 最大迭代次数
-    refine_threshold: 8         # 触发优化的分数阈值
-
-# Logging Configuration
-logging:
-  level: "INFO"
-  file: "output/logs/coreminer.log"
-  console: true
-  max_file_size: 10485760      # 10MB
-  backup_count: 5
-```
-
 ## 使用方法
 
 ### 快速开始 - 完整流程（Step 1-4）
@@ -215,7 +166,7 @@ logging:
 3. **编辑 `src/main.py` 配置输入文件路径**
    ```python
    # Step 2配置
-   mmd_file = Path(r"D:\pythonproject\CoreMiner\DeepSeek-OCR\output\your_paper.mmd")
+   mmd_file = Path(r"Your Path")
    ```
 
 4. **运行完整流程**

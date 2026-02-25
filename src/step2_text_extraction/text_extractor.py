@@ -81,13 +81,21 @@ class TextExtractor:
         Returns:
             保存的文件路径
         """
+        from src.utils.file_handler import FileHandler
+        
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        # 生成文件名
-        from datetime import datetime
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = output_dir / f"extracted_result_{timestamp}.json"
+        # 生成文件名 - 优先使用论文标题
+        title = result.get('title')
+        sanitized_title = FileHandler.sanitize_title(title) if title else None
+        
+        if sanitized_title:
+            output_file = output_dir / f"extracted_result_{sanitized_title}.json"
+        else:
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_file = output_dir / f"extracted_result_{timestamp}.json"
         
         # 保存为JSON
         with open(output_file, 'w', encoding='utf-8') as f:
