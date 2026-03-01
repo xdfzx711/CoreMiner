@@ -36,71 +36,7 @@ PDF文件输入
 
 
 
-## 项目结构
 
-```
-CoreMiner/
-├── README.md                          # 项目文档（本文件）
-├── requirements.txt                   # Python依赖
-├── config.yaml                        # 全局配置文件
-├── .env                               # API密钥（需自行创建）
-│
-├── docs/                              # 文档目录
-│   ├── 00_START_HERE.md              # 快速入门
-│   └── STEP2_GUIDE.md                # Step2详细文档
-│
-├── input/
-│   └── sample_papers/                 # 输入PDF文件夹
-│
-├── output/
-│   ├── clean_results/                 # Step2清洗结果 (JSON)
-│   ├── llm_results/                   # Step3提取结果 (JSON)
-│   ├── refine_results/                # Step4优化结果 (JSON)
-│   └── logs/                          # 执行日志
-│
-├── DeepSeek-OCR/                      # DeepSeek-OCR子项目
-│   ├── output/                        # Step1输出 (.mmd文件)
-│   └── DeepSeek-OCR-master/          # OCR核心代码
-│
-├── src/                               # 源代码
-│   ├── main.py                        # 主入口（Step1-4完整流程）
-│   │
-│   ├── step1_pdf_parsing/             # ✅ Step1: PDF解析
-│   │   ├── __init__.py
-│   │   ├── deepseek_parser.py        # DeepSeek-OCR解析器
-│   │   └── pdf_handler.py            # PDF工具
-│   │
-│   ├── step2_text_extraction/         # ✅ Step2: 提取+清洗
-│   │   ├── __init__.py
-│   │   ├── structure_extractor.py    # 文档结构提取
-│   │   ├── text_cleaner.py           # 文本清洗
-│   │   └── text_extractor.py         # 提取流程整合
-│   │
-│   ├── step3_llm_extraction/          # ✅ Step3: LLM提取
-│   │   ├── __init__.py
-│   │   ├── main.py                   # 主流程
-│   │   └── data_models.py            # 数据模型
-│   │
-│   ├── step4_refine/                  # ✅ Step4: 验证优化
-│   │   ├── __init__.py
-│   │   ├── refine_validator.py       # 验证器
-│   │   └── refiner.py                # 优化器
-│   │
-│   └── utils/                         # 通用工具
-│       ├── __init__.py
-│       ├── data_models.py            # 核心数据模型
-│       ├── file_handler.py           # 文件操作
-│       └── logger.py                 # 日志系统
-│
-└── tests/                             # 测试代码
-    ├── __init__.py
-    ├── test_step1.py                 # Step1测试
-    ├── test_step2.py                 # Step2测试
-    ├── test_step3.py                 # Step3测试
-    ├── test_step4_validator.py       # Step4验证器测试
-    ├── test_step4_refine.py          # Step4优化器测试
-    └── fixtures/                     # 测试数据
-```
 
 ## 安装和设置
 
@@ -151,7 +87,7 @@ Refine_MODEL=" "
 #### 前置步骤：准备输入文件
 
 1. **准备PDF文件**  
-   将论文PDF放入 `DeepSeek-OCR/` 目录
+   将论文PDF放入 `/DeepSeek-OCR/input` 目录
 
 2. **使用DeepSeek-OCR解析PDF（Step 1）**
    ```bash
