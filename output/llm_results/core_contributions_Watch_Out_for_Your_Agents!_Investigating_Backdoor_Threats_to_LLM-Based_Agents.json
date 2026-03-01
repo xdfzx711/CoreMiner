@@ -1,0 +1,9 @@
+{
+  "source_file": "Watch Out for Your Agents! Investigating Backdoor Threats to LLM-Based Agents",
+  "title": "Watch Out for Your Agents! Investigating Backdoor Threats to LLM-Based Agents",
+  "contributions_summary": "First, this work establishes the first general framework for backdoor attacks on LLM-based agents, revealing that attacks can target not only final outputs but also malicious intermediate reasoning steps while preserving correct outputs—a novel threat absent in traditional LLM backdoors. Through this framework, it identifies two primary attack categories based on outcome intent and further subdivides them by trigger location—whether embedded in user queries or environmental observations—demonstrating unprecedented attack flexibility. Experiments on AgentInstruct and ToolBench confirm the high effectiveness of these attack variants, showing that current textual backdoor defenses are largely ineffective, thereby exposing a critical vulnerability in agent systems and underscoring the urgent need for specialized countermeasures.",
+  "extraction_timestamp": "2026-02-28T04:06:27.467727",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 957,
+  "completion_tokens": 140
+}

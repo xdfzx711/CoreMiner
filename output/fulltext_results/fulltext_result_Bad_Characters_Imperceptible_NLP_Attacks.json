@@ -1,0 +1,11 @@
+{
+  "source_file": "Unicode NLP_det.mmd",
+  "title": "Bad Characters: Imperceptible NLP Attacks",
+  "contributions_summary": "This paper introduces a novel class of imperceptible adversarial attacks on NLP systems that exploit Unicode encoding features—such as invisible characters, homoglyphs, bidirectional reordering, and deletion controls—to manipulate model outputs without altering visual appearance. Through systematic experiments across eight models and five NLP tasks—including machine translation, toxic content detection, and sentiment analysis—the authors demonstrate that even a single such perturbation can severely degrade performance, with three injections often rendering systems dysfunctional, and that these attacks successfully compromise commercial MLaaS platforms like Google Translate and Microsoft Azure. The authors further show that these attacks are transferable, scalable, and effective in both integrity and availability (sponge example) modes, while proposing OCR-based and preprocessing defenses that mitigate most threats without retraining, highlighting a critical, widespread vulnerability in modern text-processing systems that demands immediate security attention.",
+  "extraction_timestamp": "2026-02-28T02:12:25.192527",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 35285,
+  "completion_tokens": 171,
+  "input_length": 107834,
+  "preprocessing_mode": "none"
+}

@@ -1,0 +1,11 @@
+{
+  "source_file": "The Lies Characters Tell acl25.mmd",
+  "title": "The Lies Characters Tell: Utilizing Large Language Models to Normalize Adversarial Unicode Perturbations",
+  "contributions_summary": "This paper introduces two novel large language model (LLM)-based methods—indirect and direct homoglyph normalization—that effectively unmask offensive content concealed by visually similar Unicode characters without relying on static mapping tables. Indirect normalization replaces non-Latin characters with delimiters and prompts LLMs to infer contextually appropriate replacements, while direct normalization instructs LLMs to directly substitute homoglyphs with their Latin equivalents, leveraging their internal linguistic knowledge; GPT-4o-mini’s direct method achieved state-of-the-art normalization quality with 0.96 cosine similarity to original text. Crucially, when applied as preprocessing, GPT-4o-mini’s direct normalization restored hate speech detection model performance to near-human-normalized levels in both zero-shot and cross-validation settings, significantly outperforming traditional tools like Unidecode and Unicode NFC/NFKD. The study demonstrates that LLMs can generalize to unseen homoglyphs, offering a dynamic, scalable defense against adversarial obfuscation in real-world social media text.",
+  "extraction_timestamp": "2026-02-28T02:12:12.677374",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 19534,
+  "completion_tokens": 209,
+  "input_length": 55592,
+  "preprocessing_mode": "none"
+}

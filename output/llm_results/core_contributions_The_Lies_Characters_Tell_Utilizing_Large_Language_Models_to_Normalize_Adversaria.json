@@ -1,0 +1,9 @@
+{
+  "source_file": "The Lies Characters Tell: Utilizing Large Language Models to Normalize Adversarial Unicode Perturbations",
+  "title": "The Lies Characters Tell: Utilizing Large Language Models to Normalize Adversarial Unicode Perturbations",
+  "contributions_summary": "First, the study introduces two novel large language model (LLM)-based approaches for homoglyph normalization—indirect normalization via delimiter-based blank filling and direct normalization through LLM-driven character substitution—that eliminate reliance on static Unicode mappings. Through these methods, GPT-4o-mini achieved high fidelity in reconstructing original text, with cosine similarity scores of 0.91 and 0.96, respectively, demonstrating superior generalization to unseen homoglyph variants. Additionally, the authors constructed a novel dataset of 29,846 homoglyph-augmented tweets derived from real-world content and evaluated the robustness of hate speech detection models, revealing that LLM-normalized text significantly restores detection performance compared to unnormalized homoglyph inputs. Finally, the work establishes that LLM-driven normalization is a scalable and effective alternative to manual or rule-based methods for combating evolving homoglyph-based obfuscation.",
+  "extraction_timestamp": "2026-02-28T04:04:40.475970",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 748,
+  "completion_tokens": 188
+}

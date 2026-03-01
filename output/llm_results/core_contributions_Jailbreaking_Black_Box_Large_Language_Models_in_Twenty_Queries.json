@@ -1,0 +1,9 @@
+{
+  "source_file": "Jailbreaking Black Box Large Language Models in Twenty Queries",
+  "title": "Jailbreaking Black Box Large Language Models in Twenty Queries",
+  "contributions_summary": "PAIR introduces a novel, black-box jailbreaking algorithm that efficiently generates semantic, human-interpretable prompt-level attacks using fewer than twenty queries—over 250 times more efficient than prior methods like GCG—while achieving high success rates across major LLMs including GPT-3.5/4, Vicuna, and Gemini-Pro. Through an iterative, attacker-LLM-driven refinement process inspired by social engineering, PAIR autonomously improves jailbreak prompts without human intervention, leveraging chain-of-thought assessments to enhance both effectiveness and interpretability. Its CPU-only operation, low memory footprint, and strong transferability make it uniquely accessible for scalable red teaming, while its output format enables direct integration into safety fine-tuning pipelines through curated jailbreaking datasets.",
+  "extraction_timestamp": "2026-02-28T04:01:57.897787",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 1053,
+  "completion_tokens": 154
+}

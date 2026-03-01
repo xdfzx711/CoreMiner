@@ -1,0 +1,54 @@
+{
+  "paper_title": "F5-TTS: A Fairytaler that Fakes Fluent and Faithful Speech with Flow Matching",
+  "validation_time": "2026-02-28T03:58:08.979553",
+  "ground_truth": {
+    "abstract": "This paper introduces F5- TTS, a fully non- autoregressive text- to- speech system based on flow matching with Diffusion Transformer (DiT). Without requiring complex designs such as duration model, text encoder, and phoneme alignment, the text input is simply padded with filler tokens to the same length as input speech, and then the denoising is performed for speech generation, which was originally proved feasible by E2 TTS. However, the original design of E2 TTS makes it hard to follow due to its slow convergence and low robustness. To address these issues, we first model the input with ConvNeXt to refine the text representation, making it easy to align with the speech. We further propose an inference- time Sway Sampling strategy, which significantly improves our model's performance and efficiency. This sampling strategy for flow step can be easily applied to existing flow matching based models without retraining. Our design allows faster training and achieves an inference RTF of 0.15, which is greatly improved compared to state- of- the- art diffusion- based TTS models. Trained on a public 100K hours multilingual dataset, our Fairytaler Fakes Fluent and Faithful speech with Flow matching (F5- TTS) exhibits highly natural and expressive zero- shot ability, seamless code- switching capability, and speed control efficiency. Demo samples can be found at https://Swivid.github.io/F5- TTS. We release all code and checkpoints to promote community development .",
+    "introduction_last_third": "re issues that could not simply be solved with re- ranking. With in- depth ablation studies, our proposed F5- TTS demonstrates stronger robustness, in generating more faithful speech to the text prompt, while maintaining comparable speaker similarity. Additionally, we introduce an inference- time sampling strategy for flow steps substantially improving naturalness, intelligibility, and speaker similarity of generation. This approach can be seamlessly integrated into existing flow matching based models without retraining.",
+    "conclusion": "This work introduces F5- TTS, a fully non- autoregressive text- to- speech system based on flow matching with diffusion transformer (DiT). With a tidy pipeline, literally text in and speech out, F5- TTS achieves state- of- the- art zero- shot ability compared to existing works trained on industry- scale data. We adopt ConvNeXt for text modeling and propose the test- time Sway Sampling strategy to further improve the robustness of speech generation and inference efficiency. Our design allows faster training and inference, by achieving a test- time RTF of 0.15, which is competitive with other heavily optimized TTS models of similar performance. We open- source our code, and models, to enhance transparency and facilitate reproducible research in this area."
+  },
+  "original_summary": "F5-TTS introduces a fully non-autoregressive text-to-speech system based on flow matching with a Diffusion Transformer (DiT), eliminating the need for explicit phoneme alignment, duration modeling, or complex text encoders by directly matching padded text inputs to speech sequences. To address the robustness and convergence issues of prior end-to-end approaches like E2-TTS, it employs ConvNeXt V2 to refine text representations, enabling more reliable text-speech alignment during in-context learning. Furthermore, it proposes a novel inference-time Sway Sampling strategy that enhances generation quality—improving naturalness, intelligibility, and speaker similarity—without requiring retraining, and enables a record-low inference RTF of 0.15. Trained on a 100K-hour multilingual dataset, F5-TTS achieves state-of-the-art zero-shot performance with seamless code-switching and speed control, while being fully open-sourced to advance reproducible research.",
+  "original_validation": {
+    "is_valid": false,
+    "missing_points": [],
+    "unsupported_claims": [
+      "ConvNeXt V2 is mentioned in the summary, but the original text only refers to ConvNeXt without specifying V2.",
+      "The summary claims that F5-TTS enables in-context learning, which is not mentioned in the original text."
+    ],
+    "critique": "The summary should be revised to accurately reflect the original text by removing the mention of ConvNeXt V2 and in-context learning, as these are not supported by the provided evidence. Additionally, ensure that all claims are directly traceable to the original text to maintain accuracy.",
+    "score": 4
+  },
+  "refinement_applied": true,
+  "refinement_iterations": [
+    {
+      "iteration": 1,
+      "summary": "F5-TTS introduces a fully non-autoregressive text-to-speech system based on flow matching with a Diffusion Transformer (DiT), eliminating the need for explicit phoneme alignment, duration modeling, or complex text encoders by directly matching padded text inputs to speech sequences. To address the robustness and convergence issues of prior end-to-end approaches like E2-TTS, it employs ConvNeXt to refine text representations, enabling more reliable text-speech alignment. Furthermore, it proposes a novel inference-time Sway Sampling strategy that enhances generation quality—improving naturalness, intelligibility, and speaker similarity—without requiring retraining, and enables a record-low inference RTF of 0.15. Trained on a 100K-hour multilingual dataset, F5-TTS achieves state-of-the-art zero-shot performance with seamless code-switching and speed control, while being fully open-sourced to advance reproducible research.",
+      "validation": {
+        "is_valid": false,
+        "missing_points": [],
+        "unsupported_claims": [
+          "ConvNeXt V2 is mentioned in the summary, but the original text only refers to ConvNeXt without specifying V2.",
+          "The summary claims that F5-TTS enables in-context learning, which is not mentioned in the original text."
+        ],
+        "critique": "The summary should be revised to accurately reflect the original text by removing the mention of ConvNeXt V2 and in-context learning, as these are not supported by the provided evidence. Additionally, ensure that all claims are directly traceable to the original text to maintain accuracy.",
+        "score": 4
+      }
+    }
+  ],
+  "final_summary": "F5-TTS introduces a fully non-autoregressive text-to-speech system based on flow matching with a Diffusion Transformer (DiT), eliminating the need for explicit phoneme alignment, duration modeling, or complex text encoders by directly matching padded text inputs to speech sequences. To address the robustness and convergence issues of prior end-to-end approaches like E2-TTS, it employs ConvNeXt to refine text representations, enabling more reliable text-speech alignment. Furthermore, it proposes a novel inference-time Sway Sampling strategy that enhances generation quality—improving naturalness, intelligibility, and speaker similarity—without requiring retraining, and enables a record-low inference RTF of 0.15. Trained on a 100K-hour multilingual dataset, F5-TTS achieves state-of-the-art zero-shot performance with seamless code-switching and speed control, while being fully open-sourced to advance reproducible research.",
+  "final_validation": {
+    "is_valid": true,
+    "missing_points": [],
+    "unsupported_claims": [],
+    "critique": "The summary accurately reflects the core contributions of the paper, including the introduction of F5-TTS, the use of ConvNeXt for text representation refinement, and the novel Sway Sampling strategy. It correctly highlights the elimination of complex components like phoneme alignment and duration modeling, as well as the system's performance improvements in terms of robustness, naturalness, and inference efficiency. The summary also notes the open-sourcing of the project, which aligns with the original text. No major points are omitted, and there are no unsupported claims.",
+    "score": 9
+  },
+  "total_iterations": 1,
+  "metadata": {
+    "model": "qwen3-next-80b-a3b-instruct",
+    "prompt_tokens": 986,
+    "completion_tokens": 198,
+    "refine_threshold": 8,
+    "max_iterations": 3,
+    "source_file": "core_contributions_F5-TTS_A_Fairytaler_that_Fakes_Fluent_and_Faithful_Speech_with_Flow_Matching.json"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "source_file": "INJECAGENT: Benchmarking Indirect Prompt Injections in Tool-Integrated Large Language Model Agents",
+  "title": "INJECAGENT: Benchmarking Indirect Prompt Injections in Tool-Integrated Large Language Model Agents",
+  "contributions_summary": "First, this work formally defines indirect prompt injection (IPI) attacks on tool-integrated LLM agents, distinguishing between direct harm and data exfiltration objectives. Through the creation of INJECAGENT—a benchmark with 1,054 realistic test cases spanning 17 user and 62 attacker tools—it establishes the first standardized evaluation framework for measuring agent vulnerability to IPI. Evaluation of 30 LLM agents reveals that ReAct-prompted models, including GPT-4, are highly susceptible, with attack success rates nearly doubling when reinforced with hacking prompts, while fine-tuned agents demonstrate significantly greater resilience, highlighting a critical design trade-off. These findings expose severe security gaps in current agent architectures and underscore the urgent need for robust defense mechanisms against content-based adversarial manipulation.",
+  "extraction_timestamp": "2026-02-28T04:07:25.757766",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 931,
+  "completion_tokens": 161
+}

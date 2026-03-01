@@ -1,0 +1,9 @@
+{
+  "source_file": "AntiFake: Using Adversarial Audio to Prevent Unauthorized Speech Synthesis",
+  "title": "AntiFake: Using Adversarial Audio to Prevent Unauthorized Speech Synthesis",
+  "contributions_summary": "AntiFake introduces a proactive defense against DeepFake speech by generating adversarial perturbations that disrupt unauthorized synthesis, ensuring the output fails to mimic the victim’s voice across both machine and human perception. Through an ensemble learning framework that optimizes across multiple state-of-the-art synthesizers, it achieves over 95% protection rates even against unseen black-box commercial models. To balance technical efficacy with usability, it employs a minimal human-in-the-loop workflow—where users only rate speaker identity deviation—guided by the Analytic Hierarchy Process to harmonize computational and perceptual objectives, validated by usability tests with 24 diverse participants.",
+  "extraction_timestamp": "2026-02-28T03:55:59.019689",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 1030,
+  "completion_tokens": 126
+}

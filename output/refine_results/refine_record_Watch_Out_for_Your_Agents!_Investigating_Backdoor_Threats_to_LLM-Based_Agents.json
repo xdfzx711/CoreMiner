@@ -1,0 +1,36 @@
+{
+  "paper_title": "Watch Out for Your Agents! Investigating Backdoor Threats to LLM-Based Agents",
+  "validation_time": "2026-02-28T04:06:29.041230",
+  "ground_truth": {
+    "abstract": "Driven by the rapid development of Large Language Models (LLMs), LLM- based agents have been developed to handle various real- world applications, including finance, healthcare, and shopping, etc. It is crucial to ensure the reliability and security of LLM- based agents during applications. However, the safety issues of LLM- based agents are currently under- explored. In this work, we take the first step to investigate one of the typical safety threats, backdoor attack, to LLM- based agents. We first formulate a general framework of agent backdoor attacks, then we present a thorough analysis of different forms of agent backdoor attacks. Specifically, compared with traditional backdoor attacks on LLMs that are only able to manipulate the user inputs and model outputs, agent backdoor attacks exhibit more diverse and covert forms: (1) From the perspective of the final attacking outcomes, the agent backdoor attacker can not only choose to manipulate the final output distribution, but also introduce the malicious behavior in an intermediate reasoning step only, while keeping the final output correct. (2) Furthermore, the former category can be divided into two subcategories based on trigger locations, in which the backdoor trigger can either be hidden in the user query or appear in an intermediate observation returned by the external environment. We implement the above variations of agent backdoor attacks on two typical agent tasks including web shopping and tool utilization. Extensive experiments show that LLM- based agents suffer severely from backdoor attacks and such backdoor vulnerability cannot be easily mitigated by current textual backdoor defense algorithms. This indicates an urgent need for further research on the development of targeted defenses against backdoor attacks on LLM- based agents. Warning: This paper may contain biased content.",
+    "introduction_last_third": "udying agent backdoor attacks. Based on the formulations, we propose the corresponding data poisoning mechanisms to implement all the above variations of agent backdoor attacks on two typical agent benchmarks, AgentInstruct and ToolBench . Our experimental results show that LLM- based agents exhibit great vulnerability to different forms of backdoor attacks, thus spotlighting the need for further research on addressing this issue to create more reliable and robust LLM- based agents.",
+    "conclusion": "In this paper, we take the important step towards investigating backdoor threats to LLM- based agents. We first present a general framework of agent backdoor attacks, and point out that the form of generating intermediate reasoning steps when performing the task creates a large variety of attacking objectives. Then, we extensively discuss the different concrete types of agent backdoor attacks in detail from the perspective of both the final attacking outcomes and the trigger locations. Thorough experiments on AgentInstruct and ToolBench show the great effectiveness of all forms of agent backdoor attacks, posing a new and great challenge to the safety of applications of LLM- based agents."
+  },
+  "original_summary": "First, this work establishes the first general framework for backdoor attacks on LLM-based agents, revealing that attacks can target not only final outputs but also malicious intermediate reasoning steps while preserving correct outputs—a novel threat absent in traditional LLM backdoors. Through this framework, it identifies two primary attack categories based on outcome intent and further subdivides them by trigger location—whether embedded in user queries or environmental observations—demonstrating unprecedented attack flexibility. Experiments on AgentInstruct and ToolBench confirm the high effectiveness of these attack variants, showing that current textual backdoor defenses are largely ineffective, thereby exposing a critical vulnerability in agent systems and underscoring the urgent need for specialized countermeasures.",
+  "original_validation": {
+    "is_valid": true,
+    "missing_points": [],
+    "unsupported_claims": [],
+    "critique": "The summary accurately reflects the core contributions of the paper, including the establishment of a general framework for agent backdoor attacks, the identification of attack categories based on outcome intent and trigger location, and the demonstration of attack effectiveness through experiments. No major omissions or unsupported claims were detected.",
+    "score": 9
+  },
+  "refinement_applied": false,
+  "refinement_iterations": [],
+  "final_summary": "First, this work establishes the first general framework for backdoor attacks on LLM-based agents, revealing that attacks can target not only final outputs but also malicious intermediate reasoning steps while preserving correct outputs—a novel threat absent in traditional LLM backdoors. Through this framework, it identifies two primary attack categories based on outcome intent and further subdivides them by trigger location—whether embedded in user queries or environmental observations—demonstrating unprecedented attack flexibility. Experiments on AgentInstruct and ToolBench confirm the high effectiveness of these attack variants, showing that current textual backdoor defenses are largely ineffective, thereby exposing a critical vulnerability in agent systems and underscoring the urgent need for specialized countermeasures.",
+  "final_validation": {
+    "is_valid": true,
+    "missing_points": [],
+    "unsupported_claims": [],
+    "critique": "The summary accurately reflects the core contributions of the paper, including the establishment of a general framework for agent backdoor attacks, the identification of attack categories based on outcome intent and trigger location, and the demonstration of attack effectiveness through experiments. No major omissions or unsupported claims were detected.",
+    "score": 9
+  },
+  "total_iterations": 0,
+  "metadata": {
+    "model": "qwen3-next-80b-a3b-instruct",
+    "prompt_tokens": 957,
+    "completion_tokens": 140,
+    "refine_threshold": 8,
+    "max_iterations": 3,
+    "source_file": "core_contributions_Watch_Out_for_Your_Agents!_Investigating_Backdoor_Threats_to_LLM-Based_Agents.json"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "source_file": "OPTIMIZATION-BASED PROMPT INJECTION ATTACK TO LLM-AS-A-JUDGE",
+  "title": "OPTIMIZATION-BASED PROMPT INJECTION ATTACK TO LLM-AS-A-JUDGE",
+  "contributions_summary": "JudgeDecceiver introduces a novel optimization-based prompt injection attack specifically designed to compromise LLM-as-a-Judge systems by automating the generation of adversarial sequences through a discretized optimization process that jointly minimizes three targeted losses: target-aligned generation, target-enhancement, and adversarial perplexity. Through extensive experiments on OpenChat-3.5 and Mistral-7B across LLMBar and MT-Bench datasets, it demonstrates significantly higher attack success rates than handcrafted or GCG-based methods while maintaining robustness against positional bias. The method’s efficacy is further validated through ablation studies confirming the necessity of each loss term and a detailed analysis of key attack parameters—including shadow sample count, adversarial initialization, and perturbation placement—thereby revealing critical vulnerabilities in current LLM evaluation frameworks and providing a foundation for future defensive designs.",
+  "extraction_timestamp": "2026-02-28T04:00:56.565574",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 989,
+  "completion_tokens": 168
+}

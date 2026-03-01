@@ -1,0 +1,73 @@
+{
+  "paper_title": "AGENTPOISON: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases",
+  "validation_time": "2026-02-28T04:08:44.705730",
+  "ground_truth": {
+    "abstract": "LLM agents have demonstrated remarkable performance across various applications, primarily due to their advanced capabilities in reasoning, utilizing external knowledge and tools, calling APIs, and executing actions to interact with environments. Current agents typically utilize a memory module or a retrieval- augmented generation (RAG) mechanism, retrieving past knowledge and instances with similar embeddings from knowledge bases to inform task planning and execution. However, the reliance on unverified knowledge bases raises significant concerns about their safety and trustworthiness. To uncover such vulnerabilities, we propose a novel red teaming approach AGENTPOISON, the first backdoor attack targeting generic and RAG- based LLM agents by poisoning their long- term memory or RAG knowledge base. In particular, we form the trigger generation process as a constrained optimization to optimize backdoor triggers by mapping the triggered instances to a unique embedding space, so as to ensure that whenever a user instruction contains the optimized backdoor trigger, the malicious demonstrations are retrieved from the poisoned memory or knowledge base with high probability. In the meantime, benign instructions without the trigger will still maintain normal performance. Unlike conventional backdoor attacks, AGENTPOISON requires no additional model training or fine- tuning, and the optimized backdoor trigger exhibits superior transferability, in- context coherence, and stealthiness. Extensive experiments demonstrate AGENTPOISON's effectiveness in attacking three types of real- world LLM agents: RAG- based autonomous driving agent, knowledge- intensive QA agent, and healthcare EHRAgent. We inject the poisoning instances into the RAG knowledge base and long- term memories of these agents, respectively, demonstrating the generalization of AGENTPOISON. On each agent, AGENTPOISON achieves an average attack success rate of with minimal impact on benign performance with a poison rate . The code and data is available at https://github.com/BillChan226/AgentPoison.",
+    "introduction_last_third": "zation for AGENTPOISON to optimize the backdoor trigger for effective retrieval of the malicious demonstrations and thus a higher attack success rate.- We show the effectiveness of AGENTPOISON, compared with four baseline attacks, on three types of LLM agents. AGENTPOISON achieves retrieval success rate and end-to-end attack success rate with less than drop in benign performance with less than poisoning ratio.- We demonstrate the transferability of the optimized trigger among different RAG embedders, its resilience against various perturbations, and its evasiveness against two types of defenses.",
+    "conclusion": "5 ConclusionIn this paper, we propose a novel red- teaming approach AGENTPOISON to holistically assess the safety and trustworthiness of RAG- based LLM agents. Specifically, AGENTPOISON consists of a constrained trigger optimization algorithm that seeks to map the queries into a unique and compact region in the embedding space to ensure high retrieval accuracy and end- to- end attack success rate. Notably, AGENTPOISON does not require any model training while the optimized trigger is highly transferable, stealthy, and coherent. Extensive experiments on three real- world agents demonstrate the effectiveness of AGENTPOISON over four baselines across four comprehensive metrics."
+  },
+  "original_summary": "AGENTPOISON introduces the first backdoor attack targeting RAG-based LLM agents by poisoning their long-term memory or knowledge base without requiring model retraining, instead leveraging a constrained optimization framework to embed malicious demonstrations into a compact, isolated region of the embedding space using minimal, stealthy triggers. This approach achieves high attack success rates—often with a single poisoned instance and a single-token trigger—while preserving near-native performance on benign inputs, demonstrating unprecedented efficiency and evasion. The optimized triggers exhibit strong transferability across diverse RAG embedders, resilience to text perturbations, and immunity to common defenses like perplexity checks and rephrasing, validating their practical threat. Extensive evaluations on autonomous driving, QA, and healthcare agents confirm AGENTPOISON’s generalizability and superiority over four baseline attacks across multiple metrics.",
+  "original_validation": {
+    "is_valid": false,
+    "missing_points": [
+      "The summary omits the fact that AGENTPOISON achieves retrieval success rate and end-to-end attack success rate with minimal drop in benign performance and less than poisoning ratio.",
+      "The summary does not mention the specific metrics used to demonstrate AGENTPOISON's effectiveness over four baselines."
+    ],
+    "unsupported_claims": [
+      "The claim that AGENTPOISON achieves high attack success rates often with a single poisoned instance and a single-token trigger is not supported by the original text.",
+      "The claim of immunity to common defenses like perplexity checks and rephrasing is not explicitly mentioned in the original text."
+    ],
+    "critique": "The summary should include the specific metrics used to demonstrate AGENTPOISON's effectiveness over four baselines, as mentioned in the conclusion. It should also clarify the extent of the attack success rates and the poisoning ratio as stated in the original text. Additionally, remove unsupported claims about single-token triggers and immunity to defenses unless these are explicitly stated in the original text.",
+    "score": 4
+  },
+  "refinement_applied": true,
+  "refinement_iterations": [
+    {
+      "iteration": 1,
+      "summary": "AGENTPOISON introduces the first backdoor attack targeting RAG-based LLM agents by poisoning their long-term memory or knowledge base without requiring model retraining, instead leveraging a constrained optimization framework to embed malicious demonstrations into a compact, isolated region of the embedding space. This approach achieves retrieval success rate and end-to-end attack success rate with less than drop in benign performance with less than poisoning ratio, demonstrating high efficiency and evasion. The optimized triggers exhibit strong transferability across diverse RAG embedders and resilience to text perturbations, validating their practical threat. Extensive evaluations on autonomous driving, QA, and healthcare agents confirm AGENTPOISON’s generalizability and superiority over four baseline attacks across four comprehensive metrics.",
+      "validation": {
+        "is_valid": false,
+        "missing_points": [
+          "The summary omits the fact that AGENTPOISON achieves retrieval success rate and end-to-end attack success rate with minimal drop in benign performance and less than poisoning ratio.",
+          "The summary does not mention the specific metrics used to demonstrate AGENTPOISON's effectiveness over four baselines."
+        ],
+        "unsupported_claims": [
+          "The claim that AGENTPOISON achieves high attack success rates often with a single poisoned instance and a single-token trigger is not supported by the original text.",
+          "The claim of immunity to common defenses like perplexity checks and rephrasing is not explicitly mentioned in the original text."
+        ],
+        "critique": "The summary should include the specific metrics used to demonstrate AGENTPOISON's effectiveness over four baselines, as mentioned in the conclusion. It should also clarify the extent of the attack success rates and the poisoning ratio as stated in the original text. Additionally, remove unsupported claims about single-token triggers and immunity to defenses unless these are explicitly stated in the original text.",
+        "score": 4
+      }
+    },
+    {
+      "iteration": 2,
+      "summary": "AGENTPOISON introduces the first backdoor attack targeting RAG-based LLM agents by poisoning their long-term memory or knowledge base without requiring model retraining, instead leveraging a constrained optimization framework to embed malicious demonstrations into a compact, isolated region of the embedding space. This approach achieves high retrieval success rate and end-to-end attack success rate with minimal drop in benign performance at low poisoning ratios, demonstrating high efficiency and evasion. The optimized triggers exhibit strong transferability across diverse RAG embedders and resilience to text perturbations, validating their practical threat. Extensive evaluations on autonomous driving, QA, and healthcare agents confirm AGENTPOISON’s generalizability and superiority over four baseline attacks across four comprehensive metrics.",
+      "validation": {
+        "is_valid": false,
+        "missing_points": [],
+        "unsupported_claims": [
+          "The summary mentions 'retrieval success rate and end-to-end attack success rate with less than drop in benign performance with less than poisoning ratio' without specifying the actual values, which are not directly provided in the original text."
+        ],
+        "critique": "The summary should specify the actual values for retrieval success rate, end-to-end attack success rate, and the drop in benign performance, as these are critical metrics mentioned in the original text. Additionally, the summary should avoid vague language and ensure that all claims are directly supported by the original text. Removing unsupported numerical claims would improve accuracy.",
+        "score": 4
+      }
+    }
+  ],
+  "final_summary": "AGENTPOISON introduces the first backdoor attack targeting RAG-based LLM agents by poisoning their long-term memory or knowledge base without requiring model retraining, instead leveraging a constrained optimization framework to embed malicious demonstrations into a compact, isolated region of the embedding space. This approach achieves high retrieval success rate and end-to-end attack success rate with minimal drop in benign performance at low poisoning ratios, demonstrating high efficiency and evasion. The optimized triggers exhibit strong transferability across diverse RAG embedders and resilience to text perturbations, validating their practical threat. Extensive evaluations on autonomous driving, QA, and healthcare agents confirm AGENTPOISON’s generalizability and superiority over four baseline attacks across four comprehensive metrics.",
+  "final_validation": {
+    "is_valid": true,
+    "missing_points": [],
+    "unsupported_claims": [],
+    "critique": "The contribution summary accurately reflects the core innovations and findings of the original text. It captures the essence of AGENTPOISON's approach, including the use of a constrained optimization framework, the high retrieval and attack success rates, minimal impact on benign performance, and the transferability and resilience of the optimized triggers. The summary also correctly mentions the evaluation on different types of agents and the superiority over baseline attacks. No significant omissions or unsupported claims were detected.",
+    "score": 9
+  },
+  "total_iterations": 2,
+  "metadata": {
+    "model": "qwen3-next-80b-a3b-instruct",
+    "prompt_tokens": 1065,
+    "completion_tokens": 164,
+    "refine_threshold": 8,
+    "max_iterations": 3,
+    "source_file": "core_contributions_Zhaorun_Chen_(^{1})_,_Zhen_Xiang_(^{2})_,_Chaowei_Xiao_(^{3})_,_Dawn_Song_(^{4}).json"
+  }
+}

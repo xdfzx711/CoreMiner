@@ -1,0 +1,11 @@
+{
+  "source_file": "F5-TTS_det.mmd",
+  "title": "F5-TTS: A Fairytaler that Fakes Fluent and Faithful Speech with Flow Matching",
+  "contributions_summary": "F5-TTS introduces a fully non-autoregressive text-to-speech system that achieves state-of-the-art zero-shot generation by eliminating explicit phoneme alignment, duration modeling, and text encoders, instead using character sequences padded to match speech length and refined via ConvNeXt V2 blocks to improve text-speech alignment during training. It leverages a Diffusion Transformer (DiT) backbone with adaptive layer normalization conditioned on flow steps, enabling faster convergence and more robust synthesis compared to prior methods like E2 TTS, which suffer from semantic-acoustic entanglement and alignment failures. Crucially, the paper proposes Sway Sampling—a novel inference-time, non-uniform sampling strategy for flow steps that biases sampling toward early-stage noise reduction, significantly improving faithfulness to text, speaker similarity, and inference efficiency (achieving an RTF of 0.15 with only 16 NFE) without requiring retraining, and is broadly applicable to other flow-matching models.",
+  "extraction_timestamp": "2026-02-28T02:10:46.864918",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 30274,
+  "completion_tokens": 199,
+  "input_length": 79934,
+  "preprocessing_mode": "none"
+}

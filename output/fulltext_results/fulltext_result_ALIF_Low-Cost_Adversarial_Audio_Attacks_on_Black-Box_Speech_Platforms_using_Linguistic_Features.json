@@ -1,0 +1,11 @@
+{
+  "source_file": "Low-Cost Adversarial Audio Attacks on Black-Box Speech Platforms using.mmd",
+  "title": "ALIF: Low-Cost Adversarial Audio Attacks on Black-Box Speech Platforms using Linguistic Features",
+  "contributions_summary": "ALIF introduces the first black-box adversarial attack pipeline that generates audio perturbations in the linguistic embedding space of TTS models, rather than the raw waveform, enabling highly efficient and robust attacks against commercial ASR systems. By leveraging the reciprocal structure between TTS and ASR, ALIF-OTL achieves up to 97.7% higher query efficiency than prior methods—sometimes succeeding with just one query—while ALIF-OTA extends this to physical environments using particle swarm optimization, maintaining 81.3% success rates with 73.3% fewer queries. Crucially, ALIF demonstrates unprecedented resilience to ASR model updates, with attack success rates remaining stable over three months, directly addressing the critical vulnerability of traditional adversarial examples to model retraining.",
+  "extraction_timestamp": "2026-02-28T02:11:09.197842",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 30131,
+  "completion_tokens": 158,
+  "input_length": 103996,
+  "preprocessing_mode": "none"
+}

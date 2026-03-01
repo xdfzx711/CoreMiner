@@ -1,0 +1,54 @@
+{
+  "paper_title": "AgentDojo: A Dynamic Environment to Evaluate Attacks and Defenses for LLM Agents",
+  "validation_time": "2026-02-28T03:55:04.844573",
+  "ground_truth": {
+    "abstract": "text[[232, 352, 765, 560]]\nAI agents aim to solve complex tasks by combining text- based reasoning with external tool calls. Unfortunately, AI agents are vulnerable to prompt injection attacks where data returned by external tools hijacks the agent to execute malicious tasks. To measure the adversarial robustness of AI agents, we introduce AgentDojo, an evaluation framework for agents that execute tools over untrusted data. To capture the evolving nature of attacks and defenses, AgentDojo is not a static test suite, but rather an extensible environment for designing and evaluating new agent tasks, defenses, and adaptive attacks. We populate the environment with 97 realistic tasks (e.g., managing an email client, navigating an e- banking website, or making travel bookings), 629 security test cases, and various attack and defense paradigms from the literature. We find that AgentDojo poses a challenge for both attacks and defenses: state- of- the- art LLMs fail at many tasks (even in the absence of attacks), and existing prompt injection attacks break some security properties but not all. We hope that AgentDojo can foster research on new design principles for AI agents that solve common tasks in a reliable and robust manner.\n\ntext[[392, 582, 604, 595]]\nhttps://agentdojo.spylab.ai\n\nsub_title[[175, 616, 310, 633]]",
+    "introduction_last_third": "e that AgentDojo can serve as a live benchmark environment for measuring the progress of AI agents on increasingly challenging tasks, but also as a quantitative way of showcasing the inherent security limitations of current AI agents in adversarial settings.\n\ntext[[175, 682, 824, 712]]\nWe release code for AgentDojo at https://github.com/ethz- spylab/agentdojo, and a leaderboard and extensive documentation for the library at https://agentdojo.spylab.ai.\n\nsub_title[[175, 731, 475, 749]]",
+    "conclusion": "text[[174, 445, 824, 516]]\nWe have introduced AgentDojo, a standardized agent evaluation framework for prompt injection attacks and defenses, consisting of 97 realistic tasks and 629 security test cases. We evaluated a number of attacks and defenses proposed in the literature on AI agents based on state- of- the- art tool- calling LLMs. Our results indicate that AgentDojo poses challenges for both attackers and defenders, and can serve as a live benchmark environment for measuring their respective progress.\n\ntext[[174, 521, 824, 675]]\nWe see a number of avenues for improving or extending AgentDojo: (i) we currently use relatively simple attacks and defenses, but more sophisticated defenses (e.g., isolated LLMs [61, 64], or attacks ) could be added in the future. This is ultimately our motivation for designing a dynamic benchmark environment; (ii) to scale AgentDojo to a larger variety of tasks and attack goals, it may also be necessary to automate the current manual specification of tasks and utility criteria, without sacrificing the reliability of the evaluation; (iii) Challenging tasks that cannot be directly solved using our tool selection defense (or other, more involved isolation mechanisms [61, 64]) would be particularly interesting to add; (iv) AgentDojo could be extended to support multimodal agents that process both text and images, which would dramatically expand the range of possible tasks and attacks ; (v) the addition of constraints on prompt injections (e.g., in terms of length or format) could better capture the capabilities of realistic adversaries.\n\ntext[[174, 688, 824, 758]]\nBroader impact. Overall, we believe AgentDojo provides a strong foundation for this future work by establishing a representative framework for evaluating the progress on prompt injection attacks and defenses, and to give a sense of the (in)security of current AI agents in adversarial settings. Of course, attackers could also use AgentDojo to prototype new prompt injections, but we believe this risk is largely overshadowed by the positive impact of releasing a reliable security benchmark.\n\nsub_title[[175, 777, 328, 793]]"
+  },
+  "original_summary": "First, the authors introduce AgentDojo, a dynamic and extensible evaluation framework for measuring the robustness of AI agents against prompt injection attacks in real-world tool-execution scenarios, incorporating 97 realistic tasks and 629 security test cases. Through systematic evaluation of state-of-the-art tool-calling LLMs, they reveal that agents frequently fail even without attacks, and existing defenses offer only partial protection, highlighting critical gaps in current approaches. The framework enables adaptive attack and defense experimentation, establishing a live benchmark that quantifies both the limitations of today’s agents and the potential for future innovations in reliable, secure agent design.",
+  "original_validation": {
+    "is_valid": false,
+    "missing_points": [
+      "The potential for extending AgentDojo to support multimodal agents and more sophisticated defenses.",
+      "The possibility of automating the manual specification of tasks and utility criteria to scale AgentDojo."
+    ],
+    "unsupported_claims": [],
+    "critique": "The summary accurately captures the introduction of AgentDojo and its purpose, but it omits the potential extensions and improvements mentioned in the conclusion, such as supporting multimodal agents and automating task specifications. Including these points would provide a more comprehensive view of the framework's future directions. Additionally, the summary could mention the broader impact and potential risks associated with AgentDojo, as discussed in the original text.",
+    "score": 7
+  },
+  "refinement_applied": true,
+  "refinement_iterations": [
+    {
+      "iteration": 1,
+      "summary": "First, the authors introduce AgentDojo, a dynamic and extensible evaluation framework for measuring the robustness of AI agents against prompt injection attacks in real-world tool-execution scenarios, incorporating 97 realistic tasks and 629 security test cases. Through systematic evaluation of state-of-the-art tool-calling LLMs, they reveal that agents frequently fail even without attacks, and existing defenses offer only partial protection, highlighting critical gaps in current approaches. The framework enables adaptive attack and defense experimentation, establishing a live benchmark that quantifies both the limitations of today’s agents and the potential for future innovations in reliable, secure agent design. AgentDojo can be extended to support multimodal agents and more sophisticated defenses, and future work may automate the manual specification of tasks and utility criteria to scale its scope. We believe AgentDojo provides a strong foundation for this future work by establishing a representative framework for evaluating the progress on prompt injection attacks and defenses, and to give a sense of the (in)security of current AI agents in adversarial settings.",
+      "validation": {
+        "is_valid": false,
+        "missing_points": [
+          "The potential for extending AgentDojo to support multimodal agents and more sophisticated defenses.",
+          "The possibility of automating the manual specification of tasks and utility criteria to scale AgentDojo."
+        ],
+        "unsupported_claims": [],
+        "critique": "The summary accurately captures the introduction of AgentDojo and its purpose, but it omits the potential extensions and improvements mentioned in the conclusion, such as supporting multimodal agents and automating task specifications. Including these points would provide a more comprehensive view of the framework's future directions. Additionally, the summary could mention the broader impact and potential risks associated with AgentDojo, as discussed in the original text.",
+        "score": 7
+      }
+    }
+  ],
+  "final_summary": "First, the authors introduce AgentDojo, a dynamic and extensible evaluation framework for measuring the robustness of AI agents against prompt injection attacks in real-world tool-execution scenarios, incorporating 97 realistic tasks and 629 security test cases. Through systematic evaluation of state-of-the-art tool-calling LLMs, they reveal that agents frequently fail even without attacks, and existing defenses offer only partial protection, highlighting critical gaps in current approaches. The framework enables adaptive attack and defense experimentation, establishing a live benchmark that quantifies both the limitations of today’s agents and the potential for future innovations in reliable, secure agent design. AgentDojo can be extended to support multimodal agents and more sophisticated defenses, and future work may automate the manual specification of tasks and utility criteria to scale its scope. We believe AgentDojo provides a strong foundation for this future work by establishing a representative framework for evaluating the progress on prompt injection attacks and defenses, and to give a sense of the (in)security of current AI agents in adversarial settings.",
+  "final_validation": {
+    "is_valid": true,
+    "missing_points": [],
+    "unsupported_claims": [],
+    "critique": "The summary accurately reflects the core contributions and findings of the paper as presented in the abstract and conclusion. All major points, such as the introduction of AgentDojo, the number of tasks and test cases, the challenges faced by current AI agents, and the potential for future extensions, are well-covered. No significant omissions or unsupported claims were detected.",
+    "score": 9
+  },
+  "total_iterations": 1,
+  "metadata": {
+    "model": "qwen3-next-80b-a3b-instruct",
+    "prompt_tokens": 1331,
+    "completion_tokens": 127,
+    "refine_threshold": 8,
+    "max_iterations": 3,
+    "source_file": "core_contributions_AgentDojo_A_Dynamic_Environment_to_Evaluate_Attacks_and_Defenses_for_LLM_Agents.json"
+  }
+}

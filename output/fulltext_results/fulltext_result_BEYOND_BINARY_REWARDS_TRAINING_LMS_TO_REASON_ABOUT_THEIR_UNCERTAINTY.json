@@ -1,0 +1,11 @@
+{
+  "source_file": "RLCR.mmd",
+  "title": "BEYOND BINARY REWARDS: TRAINING LMS TO REASON ABOUT THEIR UNCERTAINTY",
+  "contributions_summary": "RLCR introduces a novel reinforcement learning framework that jointly optimizes language models for both accuracy and calibration by augmenting traditional binary correctness rewards with the Brier score, a proper scoring rule that incentivizes truthful confidence estimation. Theoretically, this reward function provably encourages models to output answers with confidence levels that match their true probability of correctness, avoiding the overconfidence and hallucination pitfalls of standard RL training. Empirically, RLCR matches or exceeds the accuracy of conventional reasoning models while dramatically improving calibration across in-domain and out-of-domain benchmarks, outperforming post-hoc confidence classifiers and probes; further, verbalized confidence scores enable effective test-time scaling via confidence-weighted ensembling, enhancing both accuracy and reliability without additional training.",
+  "extraction_timestamp": "2026-02-28T02:12:01.466770",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 29492,
+  "completion_tokens": 148,
+  "input_length": 97647,
+  "preprocessing_mode": "none"
+}

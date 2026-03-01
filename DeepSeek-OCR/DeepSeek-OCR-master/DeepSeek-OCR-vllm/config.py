@@ -22,7 +22,7 @@ MODEL_PATH = 'deepseek-ai/DeepSeek-OCR' # change to your model path
 # Omnidocbench images path: run_dpsk_ocr_eval_batch.py
 
 INPUT_PATH = '/home/ubuntu/pythonproject/CoreMiner/DeepSeek-OCR/input/agent_benchmark.pdf'
-OUTPUT_PATH = '/home/ubuntu/pythonproject/CoreMiner/DeepSeek-OCR/output_002'
+OUTPUT_PATH = '/home/ubuntu/pythonproject/CoreMiner/DeepSeek-OCR/output_016'
 
 PROMPT = '<image>\n<|grounding|>Convert the document to markdown.'
 # PROMPT = '<image>\nFree OCR.'

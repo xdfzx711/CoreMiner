@@ -1,0 +1,9 @@
+{
+  "source_file": "IMPERCEPTIBLE JAILBREAKING AGAINST LARGE LANGUAGE MODELS",
+  "title": "IMPERCEPTIBLE JAILBREAKING AGAINST LARGE LANGUAGE MODELS",
+  "contributions_summary": "First, this paper introduces imperceptible jailbreaks that exploit invisible Unicode variation selectors to adversarially alter tokenization without any visible changes to the prompt, thereby bypassing LLM safety alignments for the first time. Through a novel chain-of-search pipeline, the method efficiently optimizes these invisible suffixes by iteratively reusing successful components and target-start tokens, enabling effective transfer across diverse malicious queries. Finally, the approach achieves high attack success rates against four aligned LLMs and generalizes to prompt injection attacks, revealing a critical vulnerability in current alignment mechanisms rooted in the overlooked handling of invisible Unicode characters.",
+  "extraction_timestamp": "2026-02-28T03:58:52.678393",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 962,
+  "completion_tokens": 122
+}

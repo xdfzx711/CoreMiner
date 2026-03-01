@@ -1,0 +1,9 @@
+{
+  "source_file": "F5-TTS: A Fairytaler that Fakes Fluent and Faithful Speech with Flow Matching",
+  "title": "F5-TTS: A Fairytaler that Fakes Fluent and Faithful Speech with Flow Matching",
+  "contributions_summary": "F5-TTS introduces a fully non-autoregressive text-to-speech system based on flow matching with a Diffusion Transformer (DiT), eliminating the need for explicit phoneme alignment, duration modeling, or complex text encoders by directly matching padded text inputs to speech sequences. To address the robustness and convergence issues of prior end-to-end approaches like E2-TTS, it employs ConvNeXt V2 to refine text representations, enabling more reliable text-speech alignment during in-context learning. Furthermore, it proposes a novel inference-time Sway Sampling strategy that enhances generation quality—improving naturalness, intelligibility, and speaker similarity—without requiring retraining, and enables a record-low inference RTF of 0.15. Trained on a 100K-hour multilingual dataset, F5-TTS achieves state-of-the-art zero-shot performance with seamless code-switching and speed control, while being fully open-sourced to advance reproducible research.",
+  "extraction_timestamp": "2026-02-28T03:58:01.575238",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 986,
+  "completion_tokens": 198
+}

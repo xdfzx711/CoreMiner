@@ -1,0 +1,11 @@
+{
+  "source_file": "Practical Hidden Voice Attacks against Speech and.mmd",
+  "title": "Practical Hidden Voice Attacks against Speech and Speaker Recognition Systems",
+  "contributions_summary": "This paper introduces a practical, model-agnostic approach to hidden voice attacks by targeting the signal processing stage of Voice Processing Systems (VPSes) rather than the underlying machine learning models, enabling successful black-box attacks across diverse and proprietary systems without requiring model-specific knowledge. By exploiting the deterministic nature of classical feature extraction algorithms—particularly MFCCs—and leveraging psychoacoustic principles such as high-frequency masking and time-domain discontinuities, the authors generate unintelligible audio perturbations that preserve critical acoustic features for VPS recognition while evading human perception. The method, implemented through four perturbation techniques (Time Domain Inversion, Random Phase Generation, High Frequency Addition, and Time Scaling), achieves near-100% success rates against 12 VPSes—including seven major commercial APIs—across both over-the-line and over-the-air deployments, demonstrating unprecedented hardware and model independence. Crucially, the attacks require only seconds to generate and remain effective even in noisy environments, fundamentally shifting the threat landscape by proving that domain-specific audio processing knowledge, not model access, is the critical vulnerability in modern voice systems.",
+  "extraction_timestamp": "2026-02-28T02:11:45.502847",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 20728,
+  "completion_tokens": 224,
+  "input_length": 87845,
+  "preprocessing_mode": "none"
+}

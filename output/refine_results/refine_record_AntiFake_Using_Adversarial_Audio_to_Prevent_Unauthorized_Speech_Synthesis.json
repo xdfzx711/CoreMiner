@@ -1,0 +1,72 @@
+{
+  "paper_title": "AntiFake: Using Adversarial Audio to Prevent Unauthorized Speech Synthesis",
+  "validation_time": "2026-02-28T03:56:10.876186",
+  "ground_truth": {
+    "abstract": "The rapid development of deep neural networks and generative AI has catalyzed growth in realistic speech synthesis. While this technology has great potential to improve lives, it also leads to the emergence of \"DeepFake\" where synthesized speech can be misused to deceive humans and machines for nefarious purposes. In response to this evolving threat, there has been a significant amount of interest in mitigating this threat by DeepFake detection.\n\nComplementary to the existing work, we propose to take the preventative approach and introduce AntiFake, a defense mechanism that relies on adversarial examples to prevent unauthorized speech synthesis. To ensure the transferability to attackers' unknown synthesis models, an ensemble learning approach is adopted to improve the generalizability of the optimization process. To validate the efficacy of the proposed system, we evaluated AntiFake against five state- of- the- art synthesizers using real- world DeepFake speech samples. The experiments indicated that AntiFake achieved over protection rate even to unknown black- box models. We have also conducted usability tests involving 24 human participants to ensure the solution is accessible to diverse populations.",
+    "introduction_last_third": " to the ongoing battle against the spread of misinformation and impersonation. Our contributions are outlined as follows.\n\n- We propose AntiFake, a proactive defense approach leveraging adversarial examples to disrupt unauthorized speech synthesis, such that the synthesized DeepFake audio does not resemble the victim's voice to both humans and machines.- We develop a human-in-the-loop workflow of AntiFake to enable users to customize voices with minimal human effort. To address the challenge of unknown attackers' synthesizers, we adopt an ensemble learning approach on a set of combined state-of-the-art encoder models.- We evaluate AntiFake against five contemporary synthesizers including one commercial product, and three speaker verification systems including one commercial platform. AntiFake achieves over 95% protection rate even against unseen commercial synthesizers. We also conducted usability tests involving 24 human participants.",
+    "conclusion": "In this work, we propose AntiFake, a preventative defense against DeepFake audio threats. complementary to existing detection methods, AntiFake leverages adversarial perturbations to hinder unauthorized speech synthesis. To improve usability and accessibility to diverse populations, AntiFake is designed as a human- in- the- loop system involving minimal human efforts. The efficacy of AntiFake is evaluated with state- of- the- art synthesizers, and the usability is validated with usability tests involving human participants."
+  },
+  "original_summary": "AntiFake introduces a proactive defense against DeepFake speech by generating adversarial perturbations that disrupt unauthorized synthesis, ensuring the output fails to mimic the victim’s voice across both machine and human perception. Through an ensemble learning framework that optimizes across multiple state-of-the-art synthesizers, it achieves over 95% protection rates even against unseen black-box commercial models. To balance technical efficacy with usability, it employs a minimal human-in-the-loop workflow—where users only rate speaker identity deviation—guided by the Analytic Hierarchy Process to harmonize computational and perceptual objectives, validated by usability tests with 24 diverse participants.",
+  "original_validation": {
+    "is_valid": false,
+    "missing_points": [
+      "The introduction of AntiFake as a complementary approach to existing detection methods",
+      "The specific mention of evaluating AntiFake against three speaker verification systems"
+    ],
+    "unsupported_claims": [
+      "Guidance by the Analytic Hierarchy Process to harmonize computational and perceptual objectives"
+    ],
+    "critique": "The summary should include the fact that AntiFake is complementary to existing detection methods, which is a key point in the original text. Additionally, the evaluation against speaker verification systems is omitted and should be included as it is part of the core contributions. The claim about using the Analytic Hierarchy Process is not supported by the original text and should be removed to avoid hallucination.",
+    "score": 5
+  },
+  "refinement_applied": true,
+  "refinement_iterations": [
+    {
+      "iteration": 1,
+      "summary": "AntiFake introduces a proactive defense against DeepFake speech by generating adversarial perturbations that disrupt unauthorized synthesis, ensuring the output fails to mimic the victim’s voice across both machine and human perception. Complementary to existing detection methods, AntiFake leverages adversarial examples to prevent unauthorized speech synthesis. Through an ensemble learning framework that optimizes across multiple state-of-the-art synthesizers, it achieves over 95% protection rates even against unseen black-box commercial models. We also evaluate AntiFake against three speaker verification systems including one commercial platform. To balance technical efficacy with usability, it employs a minimal human-in-the-loop workflow—where users only rate speaker identity deviation—validated by usability tests with 24 diverse participants.",
+      "validation": {
+        "is_valid": false,
+        "missing_points": [
+          "The introduction of AntiFake as a complementary approach to existing detection methods",
+          "The specific mention of evaluating AntiFake against three speaker verification systems"
+        ],
+        "unsupported_claims": [
+          "Guidance by the Analytic Hierarchy Process to harmonize computational and perceptual objectives"
+        ],
+        "critique": "The summary should include the fact that AntiFake is complementary to existing detection methods, which is a key point in the original text. Additionally, the evaluation against speaker verification systems is omitted and should be included as it is part of the core contributions. The claim about using the Analytic Hierarchy Process is not supported by the original text and should be removed to avoid hallucination.",
+        "score": 5
+      }
+    },
+    {
+      "iteration": 2,
+      "summary": "AntiFake introduces a proactive defense against DeepFake speech by generating adversarial perturbations that disrupt unauthorized synthesis. Complementary to existing detection methods, AntiFake leverages adversarial examples to prevent unauthorized speech synthesis. Through an ensemble learning framework that optimizes across multiple state-of-the-art synthesizers, it achieves over 95% protection rates even against unseen black-box commercial models. We also evaluate AntiFake against three speaker verification systems including one commercial platform. To balance technical efficacy with usability, it employs a minimal human-in-the-loop workflow, validated by usability tests with 24 diverse participants.",
+      "validation": {
+        "is_valid": false,
+        "missing_points": [],
+        "unsupported_claims": [
+          "AntiFake introduces a proactive defense against DeepFake speech by generating adversarial perturbations that disrupt unauthorized synthesis, ensuring the output fails to mimic the victim’s voice across both machine and human perception.",
+          "To balance technical efficacy with usability, it employs a minimal human-in-the-loop workflow—where users only rate speaker identity deviation."
+        ],
+        "critique": "The summary includes claims about AntiFake ensuring the output fails to mimic the victim’s voice across both machine and human perception, which is not explicitly stated in the original text. Additionally, the description of the human-in-the-loop workflow focusing only on rating speaker identity deviation is not supported by the original text. The summary should be revised to accurately reflect the original text by removing these unsupported claims and focusing on the validated aspects of AntiFake, such as its ensemble learning approach and usability tests.",
+        "score": 4
+      }
+    }
+  ],
+  "final_summary": "AntiFake introduces a proactive defense against DeepFake speech by generating adversarial perturbations that disrupt unauthorized synthesis. Complementary to existing detection methods, AntiFake leverages adversarial examples to prevent unauthorized speech synthesis. Through an ensemble learning framework that optimizes across multiple state-of-the-art synthesizers, it achieves over 95% protection rates even against unseen black-box commercial models. We also evaluate AntiFake against three speaker verification systems including one commercial platform. To balance technical efficacy with usability, it employs a minimal human-in-the-loop workflow, validated by usability tests with 24 diverse participants.",
+  "final_validation": {
+    "is_valid": true,
+    "missing_points": [],
+    "unsupported_claims": [],
+    "critique": "The summary accurately reflects the key contributions and findings of the paper, including the introduction of AntiFake, its use of adversarial perturbations, the ensemble learning framework, and the human-in-the-loop workflow. It also correctly mentions the evaluation against synthesizers and speaker verification systems, as well as the usability tests with 24 participants. No significant omissions or unsupported claims were found.",
+    "score": 9
+  },
+  "total_iterations": 2,
+  "metadata": {
+    "model": "qwen3-next-80b-a3b-instruct",
+    "prompt_tokens": 1030,
+    "completion_tokens": 126,
+    "refine_threshold": 8,
+    "max_iterations": 3,
+    "source_file": "core_contributions_AntiFake_Using_Adversarial_Audio_to_Prevent_Unauthorized_Speech_Synthesis.json"
+  }
+}

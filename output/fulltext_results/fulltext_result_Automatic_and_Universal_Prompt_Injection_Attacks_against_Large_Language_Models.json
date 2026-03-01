@@ -1,0 +1,11 @@
+{
+  "source_file": "Automatic and Universal Prompt Injection Attacks against Large Language Models.mmd",
+  "title": "Automatic and Universal Prompt Injection Attacks against Large Language Models",
+  "contributions_summary": "This paper introduces a unified framework for prompt injection attacks by categorizing their objectives into static, semi-dynamic, and dynamic goals, enabling comprehensive and realistic evaluation of LLM vulnerabilities. It proposes a momentum-enhanced gradient-based optimization method that automatically generates universal prompt injection payloads with minimal training data—just five samples—achieving an average 50% attack success rate across diverse tasks and objectives, far surpassing handcrafted baselines. The method demonstrates strong universality and robustness against multiple defense mechanisms, including data isolation and instruction filtering, and maintains high effectiveness even under adaptive adversarial settings, revealing that current defenses are largely ineffective against gradient-driven attacks and highlighting the critical need for gradient-based testing in LLM security assessments.",
+  "extraction_timestamp": "2026-02-28T02:10:35.485963",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 15146,
+  "completion_tokens": 145,
+  "input_length": 56041,
+  "preprocessing_mode": "none"
+}

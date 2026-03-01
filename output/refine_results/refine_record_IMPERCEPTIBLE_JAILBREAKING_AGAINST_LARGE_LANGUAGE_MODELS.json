@@ -1,0 +1,36 @@
+{
+  "paper_title": "IMPERCEPTIBLE JAILBREAKING AGAINST LARGE LANGUAGE MODELS",
+  "validation_time": "2026-02-28T03:58:55.031092",
+  "ground_truth": {
+    "abstract": "text[[233, 320, 765, 486]]\nJailbreaking attacks on the vision modality typically rely on imperceptible adversarial perturbations, whereas attacks on the textual modality are generally assumed to require visible modifications (e.g., non- semantic suffixes). In this paper, we introduce imperceptible jailbreaks that exploit a class of Unicode characters called variation selectors. By appending invisible variation selectors to malicious questions, the jailbreak prompts appear visually identical to original malicious questions on screen, while their tokenization is \"secretly\" altered. We propose a chain- of- search pipeline to generate such adversarial suffixes to induce harmful responses. Our experiments show that our imperceptible jailbreaks achieve high attack success rates against four aligned LLMs and generalize to prompt injection attacks, all without producing any visible modifications in the written prompt. Our code is available at https://github.com/sail- sg/imperceptible- jailbreaks.\n\nsub_title[[175, 510, 335, 526]]",
+    "introduction_last_third": "tors can be adversarially optimized to circumvent LLM safety alignment.- We introduce a chain-of-search pipeline to enable the effective optimization of imperceptible adversarial suffixes.- We demonstrate that our imperceptible jailbreaks achieve high attack success rates against four aligned LLMs while remaining visually indistinguishable from original malicious questions on screen, and this method can be extended to prompt injection attacks as well.\n\nsub_title[[175, 751, 344, 767]]",
+    "conclusion": "text[[174, 133, 823, 286]]\n5 CONCLUSIONIn this paper, unlike existing jailbreaks that rely on visibly altering malicious questions, we propose imperceptible jailbreaks, a novel class of attacks that leverage invisible variation selectors to craft adversarial suffixes appended to malicious questions without introducing any visible changes. To optimize these invisible suffixes, we introduce a chain- of- search pipeline that iteratively reuses successful suffixes and target- start tokens to conduct a random search in multiple rounds. This bootstrapped approach enables effective transfer of adversarial components across diverse malicious questions, improving the effectiveness of our imperceptible jailbreaks. Our extensive experiments on four aligned LLMs demonstrate that our method achieves high attack success rates, with the resultant jailbreak prompts remaining visually identical to their original forms when rendered on screen. Our imperceptible jailbreaks reveal a critical vulnerability from invisible variation characters in current LLM alignment mechanisms.\n\nsub_title[[175, 308, 343, 323]]"
+  },
+  "original_summary": "First, this paper introduces imperceptible jailbreaks that exploit invisible Unicode variation selectors to adversarially alter tokenization without any visible changes to the prompt, thereby bypassing LLM safety alignments for the first time. Through a novel chain-of-search pipeline, the method efficiently optimizes these invisible suffixes by iteratively reusing successful components and target-start tokens, enabling effective transfer across diverse malicious queries. Finally, the approach achieves high attack success rates against four aligned LLMs and generalizes to prompt injection attacks, revealing a critical vulnerability in current alignment mechanisms rooted in the overlooked handling of invisible Unicode characters.",
+  "original_validation": {
+    "is_valid": true,
+    "missing_points": [],
+    "unsupported_claims": [],
+    "critique": "The summary accurately reflects the key contributions and findings of the paper. It includes the introduction of imperceptible jailbreaks using invisible Unicode variation selectors, the chain-of-search pipeline for optimizing these suffixes, and the high attack success rates achieved against four aligned LLMs. Additionally, it mentions the generalization to prompt injection attacks and the critical vulnerability revealed in current alignment mechanisms. No significant omissions or hallucinations were detected.",
+    "score": 9
+  },
+  "refinement_applied": false,
+  "refinement_iterations": [],
+  "final_summary": "First, this paper introduces imperceptible jailbreaks that exploit invisible Unicode variation selectors to adversarially alter tokenization without any visible changes to the prompt, thereby bypassing LLM safety alignments for the first time. Through a novel chain-of-search pipeline, the method efficiently optimizes these invisible suffixes by iteratively reusing successful components and target-start tokens, enabling effective transfer across diverse malicious queries. Finally, the approach achieves high attack success rates against four aligned LLMs and generalizes to prompt injection attacks, revealing a critical vulnerability in current alignment mechanisms rooted in the overlooked handling of invisible Unicode characters.",
+  "final_validation": {
+    "is_valid": true,
+    "missing_points": [],
+    "unsupported_claims": [],
+    "critique": "The summary accurately reflects the key contributions and findings of the paper. It includes the introduction of imperceptible jailbreaks using invisible Unicode variation selectors, the chain-of-search pipeline for optimizing these suffixes, and the high attack success rates achieved against four aligned LLMs. Additionally, it mentions the generalization to prompt injection attacks and the critical vulnerability revealed in current alignment mechanisms. No significant omissions or hallucinations were detected.",
+    "score": 9
+  },
+  "total_iterations": 0,
+  "metadata": {
+    "model": "qwen3-next-80b-a3b-instruct",
+    "prompt_tokens": 962,
+    "completion_tokens": 122,
+    "refine_threshold": 8,
+    "max_iterations": 3,
+    "source_file": "core_contributions_IMPERCEPTIBLE_JAILBREAKING_AGAINST_LARGE_LANGUAGE_MODELS.json"
+  }
+}

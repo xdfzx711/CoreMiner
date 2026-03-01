@@ -1,0 +1,36 @@
+{
+  "paper_title": "BEYOND BINARY REWARDS: TRAINING LMS TO REASON ABOUT THEIR UNCERTAINTY",
+  "validation_time": "2026-02-28T04:03:50.140251",
+  "ground_truth": {
+    "abstract": "text[[232, 278, 765, 599]]\nWhen language models (LMs) are trained via reinforcement learning (RL) to generate natural language \"reasoning chains\", their performance improves on a variety of difficult question answering tasks. Today, almost all successful applications of RL for reasoning use binary reward functions that evaluate the correctness of LM outputs. Because such reward functions do not penalize guessing or low- confidence outputs, they often have the unintended side- effect of degrading calibration and increasing the rate at which LMs generate incorrect responses (or \"hallucinate\") in other problem domains. This paper describes RLCR (Reinforcement Learning with Calibration Rewards), an approach to training reasoning models that jointly improves accuracy and calibrated confidence estimation. During RLCR, LMs generate both predictions and numerical confidence estimates after reasoning. They are trained to optimize a reward function that augments a binary correctness score with a Brier score—a scoring rule for confidence estimates that incentivizes calibrated prediction. We first prove that this reward function (or any analogous reward function that uses a bounded, proper scoring rule) yields models whose predictions are both accurate and well- calibrated. We next show that across diverse datasets, RLCR substantially improves calibration with no loss in accuracy, on both in- domain and out- of- domain evaluations—outperforming both ordinary RL training and classifiers trained to assign post- hoc confidence scores. While ordinary RL hurts calibration, RLCR improves it. Finally, we demonstrate that verbalized confidence can be leveraged at test time to improve accuracy and calibration via confidence- weighted scaling methods. Our results show that explicitly optimizing for calibration can produce more generally reliable reasoning models.\n\nsub_title[[176, 625, 335, 641]]",
+    "introduction_last_third": " 823, 159]]\nalso improves the coherence of model predictions across samples: when multiple reasoning chains and predictions are generated for a given question, RLCR reduces the variance in confidence scores across reasoning chains that lead to the same answer, and reduces the frequency with which models assign high confidence to contradictory answers.\n\ntext[[174, 170, 823, 215]]\nTogether, these results show that existing reasoning training methods can be straightforwardly modified to additionally optimize for calibration, and that this improves in turn improves their accuracy, robustness, and scalability.\n\nsub_title[[174, 234, 339, 250]]",
+    "conclusion": "text[[174, 134, 824, 260]]\n6 CONCLUSIONWe show that incorporating proper scoring rules into RL, via an objective we call RLCR, enables reasoning models to improve both accuracy and calibration. Our approach trains models to reason about and verbalize uncertainty, preserving task performance while significantly improving calibration in- and out- of- distribution. We demonstrate that reasoning about uncertainty improves calibration, and that our method improves the self- consistency of confidence, and improves with test- time scaling. However, there remains significant room for improvement—even after RLCR, out- of- domain calibration error is often high in an absolute sense, and models may still assign high confidence to multiple contradictory answers. Nevertheless, these results suggest a path toward reasoning systems that are not only accurate, but reliably reason about and communicate uncertainty.\n\nsub_title[[175, 282, 285, 297]]"
+  },
+  "original_summary": "RLCR introduces a novel reinforcement learning framework that jointly optimizes reasoning accuracy and calibration by augmenting binary correctness rewards with a Brier score, incentivizing models to generate well-calibrated confidence estimates alongside predictions. Through theoretical analysis and empirical validation across factual and mathematical reasoning tasks, RLCR matches or exceeds the accuracy of standard RL methods while significantly reducing calibration error—both in-domain and, crucially, out-of-domain—where conventional RL degrades calibration. Furthermore, RLCR enhances self-consistency by reducing variance in confidence scores across competing reasoning chains and enables test-time improvements via confidence-weighted ensembling, establishing a scalable path toward more reliable and uncertainty-aware language models.",
+  "original_validation": {
+    "is_valid": true,
+    "missing_points": [],
+    "unsupported_claims": [],
+    "critique": "The summary accurately reflects the core contributions of the paper as described in the abstract and conclusion. It captures the novel reinforcement learning framework RLCR, the use of Brier scores for calibration, the improvement in both accuracy and calibration, and the enhancement of self-consistency. It also correctly notes the empirical validation across tasks and the scalability of the approach. No major points are omitted, and there are no unsupported claims.",
+    "score": 9
+  },
+  "refinement_applied": false,
+  "refinement_iterations": [],
+  "final_summary": "RLCR introduces a novel reinforcement learning framework that jointly optimizes reasoning accuracy and calibration by augmenting binary correctness rewards with a Brier score, incentivizing models to generate well-calibrated confidence estimates alongside predictions. Through theoretical analysis and empirical validation across factual and mathematical reasoning tasks, RLCR matches or exceeds the accuracy of standard RL methods while significantly reducing calibration error—both in-domain and, crucially, out-of-domain—where conventional RL degrades calibration. Furthermore, RLCR enhances self-consistency by reducing variance in confidence scores across competing reasoning chains and enables test-time improvements via confidence-weighted ensembling, establishing a scalable path toward more reliable and uncertainty-aware language models.",
+  "final_validation": {
+    "is_valid": true,
+    "missing_points": [],
+    "unsupported_claims": [],
+    "critique": "The summary accurately reflects the core contributions of the paper as described in the abstract and conclusion. It captures the novel reinforcement learning framework RLCR, the use of Brier scores for calibration, the improvement in both accuracy and calibration, and the enhancement of self-consistency. It also correctly notes the empirical validation across tasks and the scalability of the approach. No major points are omitted, and there are no unsupported claims.",
+    "score": 9
+  },
+  "total_iterations": 0,
+  "metadata": {
+    "model": "qwen3-next-80b-a3b-instruct",
+    "prompt_tokens": 1230,
+    "completion_tokens": 135,
+    "refine_threshold": 8,
+    "max_iterations": 3,
+    "source_file": "core_contributions_BEYOND_BINARY_REWARDS_TRAINING_LMS_TO_REASON_ABOUT_THEIR_UNCERTAINTY.json"
+  }
+}

@@ -1,0 +1,1174 @@
+<|ref|>title<|/ref|><|det|>[[175, 98, 822, 146]]<|/det|>
+# BEYOND BINARY REWARDS: TRAINING LMS TO REASON ABOUT THEIR UNCERTAINTY  
+
+<|ref|>text<|/ref|><|det|>[[183, 168, 770, 213]]<|/det|>
+Mehul Damani\* Isha Puri\* Stewart Slocum Idan Shenfeld Leshem Choshen Yoon Kim Jacob Andreas Massachusetts Institute of Technology  
+
+<|ref|>sub_title<|/ref|><|det|>[[452, 247, 544, 263]]<|/det|>
+## ABSTRACT  
+
+<|ref|>text<|/ref|><|det|>[[232, 278, 765, 599]]<|/det|>
+When language models (LMs) are trained via reinforcement learning (RL) to generate natural language "reasoning chains", their performance improves on a variety of difficult question answering tasks. Today, almost all successful applications of RL for reasoning use binary reward functions that evaluate the correctness of LM outputs. Because such reward functions do not penalize guessing or low- confidence outputs, they often have the unintended side- effect of degrading calibration and increasing the rate at which LMs generate incorrect responses (or "hallucinate") in other problem domains. This paper describes RLCR (Reinforcement Learning with Calibration Rewards), an approach to training reasoning models that jointly improves accuracy and calibrated confidence estimation. During RLCR, LMs generate both predictions and numerical confidence estimates after reasoning. They are trained to optimize a reward function that augments a binary correctness score with a Brier score—a scoring rule for confidence estimates that incentivizes calibrated prediction. We first prove that this reward function (or any analogous reward function that uses a bounded, proper scoring rule) yields models whose predictions are both accurate and well- calibrated. We next show that across diverse datasets, RLCR substantially improves calibration with no loss in accuracy, on both in- domain and out- of- domain evaluations—outperforming both ordinary RL training and classifiers trained to assign post- hoc confidence scores. While ordinary RL hurts calibration, RLCR improves it. Finally, we demonstrate that verbalized confidence can be leveraged at test time to improve accuracy and calibration via confidence- weighted scaling methods. Our results show that explicitly optimizing for calibration can produce more generally reliable reasoning models.  
+
+<|ref|>sub_title<|/ref|><|det|>[[176, 625, 335, 641]]<|/det|>
+## 1 INTRODUCTION  
+
+<|ref|>text<|/ref|><|det|>[[175, 656, 823, 795]]<|/det|>
+Many recent advances in language models (LMs) have been driven by reasoning models—LMs trained via reinforcement learning (RL) to "think out loud" in natural language before answering questions. These models have achieved state- of- the- art performance on challenging tasks like math and programming (Guo et al., 2025). The standard approach to reasoning training (often referred to as reinforcement learning with verifiable rewards, or RLVR) performs RL with a simple binary correctness reward: \(R_{\mathrm{correctness}}(y, y^*) = \mathbb{1}_{y = y^*}\) , where \(\equiv\) checks whether the model's output \(y\) matches ground- truth answer \(y^*\) . While simple and effective for improving accuracy, this reward comes with a critical limitation: it rewards models equally whether they are confidently correct or merely guessing, and penalizes identically whether they abstain or produce incorrect answers. This incentivizes overconfident guessing, undermining trustworthiness.  
+
+<|ref|>text<|/ref|><|det|>[[175, 802, 823, 900]]<|/det|>
+Consistent with this concern, studies have shown that even when initially well- calibrated, LLMs tend to become overconfident following RL training (Leng et al., 2025). Reasoning models, in particular, tend to exhibit worsened calibration and increased hallucination rates compared to base models, particularly when trained with reward signals that emphasize only correctness (Kirichenko et al., 2025; Yao et al., 2025; OpenAI, 2025). This is a critical limitation in high- stakes domains such as healthcare or law, where models must not only be accurate but also communicate uncertainty when appropriate (Omar et al., 2024).
+
+<--- Page Split --->
+<|ref|>image<|/ref|><|det|>[[175, 100, 825, 240]]<|/det|>
+<|ref|>image_caption<|/ref|><|det|>[[173, 250, 825, 348]]<|/det|>
+<center>Figure 1: (a): Sample chain-of-thought from a model trained with RLCR, using <think>, <answer>, <analysis>, and <confidence> tags. (b) On in-domain evaluation tasks, RLCR improves on standard reasoning training (RLVR) and even slightly outperforms a combination of RLVR and a dedicated classifier trained to predict RLVR correctness. (c) When evaluating generalization to novel tasks, RLCR improves both accuracy and calibration, while other methods leave accuracy unchanged and sometimes harm calibration. All results shown are for HotpotQA, see Section 4 for results on math tasks and additional baselines. </center>  
+
+<|ref|>text<|/ref|><|det|>[[174, 372, 650, 388]]<|/det|>
+This paper aims to address these limitations by answering two questions:  
+
+<|ref|>text<|/ref|><|det|>[[202, 398, 710, 433]]<|/det|>
+(1) Can reasoning models be optimized for both correctness and calibration? 
+(2) Can the contents of reasoning chains themselves improve calibration?  
+
+<|ref|>text<|/ref|><|det|>[[173, 444, 825, 529]]<|/det|>
+We approach these questions through the lens of statistical decision theory, specifically the theory of proper scoring rules. Given a predictor that produces an output \(y\) and a confidence \(q\) , a proper scoring rule is minimized when \(q\) reflects the true probability that \(y\) will agree with a ground- truth outcome \(y^{*}\) (Gneiting & Raftery, 2007). A canonical example is the Brier score (Brier, 1950): \(R_{\mathrm{Brier}}(y, q, y^{*}) = -(q - \mathbb{1}_{y = y^{*}})^{2}\) . Proper scoring rules are widely used in forecasting (Waghmare & Ziegel, 2025), but have seen little application in training LLMs with RL.  
+
+<|ref|>text<|/ref|><|det|>[[174, 535, 824, 592]]<|/det|>
+Our approach, RLCR (reinforcement learning with calibration rewards), involves a modified version of reasoning training that encourages models to reason about both task correctness and uncertainty. To do so, we simply train models to output both answers \(y\) and (verbalized) confidence scores \(q\) , optimizing a combined reward function:  
+
+<|ref|>equation<|/ref|><|det|>[[321, 595, 822, 639]]<|/det|>
+\[\begin{array}{rl} & R_{\mathrm{RLCR}}(y,q,y^{*}) = R_{\mathrm{correctness}}(y,y^{*}) + R_{\mathrm{Brier}}(y,q,y^{*})\\ & \qquad = \mathbb{1}_{y = y^{*}} - (q - \mathbb{1}_{y = y^{*}})^{2}. \end{array} \quad (1)\]  
+
+<|ref|>text<|/ref|><|det|>[[174, 647, 736, 663]]<|/det|>
+We show that this approach has several appealing theoretical and empirical properties:  
+
+<|ref|>text<|/ref|><|det|>[[216, 672, 825, 760]]<|/det|>
+- RLCR provably incentivizes both accuracy and calibration: \(R_{\mathrm{RLCR}}\) is maximized when models output the answer most likely to be correct, along with a calibrated estimate of their probability of success. In other words, \(R_{\mathrm{RLCR}}\) is maximized by LM outputs \((y, q)\) for which \(y\) maximizes \(p(\mathbb{1}_{y = y^{*}})\) , and \(q = p(\mathbb{1}_{y = y^{*}})\) . We show that such an objective can be constructed if any bounded, proper scoring rule is used for the calibration term. Notably, while the ubiquitous log-likelihood loss is itself a proper scoring rule, it does not have this property, and can incentivize models to output incorrect answers.  
+
+<|ref|>text<|/ref|><|det|>[[216, 775, 824, 830]]<|/det|>
+- In experiments on factual question answering and mathematical reasoning tasks, RLCR matches the task accuracy of RLVR while substantially improving calibration, on in-domain problems, reducing expected calibration error from \(0.37 \to 0.03\) on HotpotQA (Yang et al., 2018) and \(0.26 \to 0.10\) on a collection of math datasets.  
+
+<|ref|>text<|/ref|><|det|>[[216, 835, 824, 890]]<|/det|>
+- When these same models are evaluated on their generalization to out-of-domain tasks, RLVR substantially worsens calibration relative to the base model. By contrast, RLCR substantially improves calibration, outperforming both the base model, a model trained with RLVR, and a predictor equipped with a second model fine-tuned only to output confidence scores.  
+
+<|ref|>text<|/ref|><|det|>[[216, 894, 824, 923]]<|/det|>
+- Verbalized confidence can be incorporated into test-time scaling methods, giving rise to improved ensembling and best-of-\(N\) methods. This may be attributed to the fact that RLVR
+
+<--- Page Split --->
+<|ref|>text<|/ref|><|det|>[[231, 103, 823, 159]]<|/det|>
+also improves the coherence of model predictions across samples: when multiple reasoning chains and predictions are generated for a given question, RLCR reduces the variance in confidence scores across reasoning chains that lead to the same answer, and reduces the frequency with which models assign high confidence to contradictory answers.  
+
+<|ref|>text<|/ref|><|det|>[[174, 170, 823, 215]]<|/det|>
+Together, these results show that existing reasoning training methods can be straightforwardly modified to additionally optimize for calibration, and that this improves in turn improves their accuracy, robustness, and scalability.  
+
+<|ref|>sub_title<|/ref|><|det|>[[174, 234, 339, 250]]<|/det|>
+## 2 PRELIMINARIES  
+
+<|ref|>text<|/ref|><|det|>[[174, 265, 823, 323]]<|/det|>
+Let \(\pi_{\theta}\) be a language model that maps from prompts \(x\in \mathcal{X}\) to outputs \(y\in Y\) , both of which may be encoded as strings. Given a dataset of prompt- output pairs \(D = \{(x_{i},y_{i}^{*})\}\) (e.g. questions and ground- truth answers) and a reward function \(R:Y\times Y\to \mathbb{R}\) that compares predicted to ground- truth answers, our goal is to improve LM outputs by optimizing:  
+
+<|ref|>equation<|/ref|><|det|>[[360, 328, 821, 355]]<|/det|>
+\[\arg \max_{\theta}\mathbb{E}_{(x,y^{*})\sim D,y\sim \pi_{\theta}(\cdot |x)}R(y,y^{*}). \quad (2)\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 368, 823, 398]]<|/det|>
+Reinforcement learning with verifiable rewards (RLVR) When training reasoning models, a standard choice of \(R\) is the binary correctness reward:  
+
+<|ref|>equation<|/ref|><|det|>[[405, 403, 821, 422]]<|/det|>
+\[R_{\mathrm{correctness}}(y,y^{*}) = \mathbb{1}_{y\equiv y^{*}}, \quad (3)\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 428, 823, 459]]<|/det|>
+where \(\mathbb{1}_{y\equiv y^{*}}\in \{0,1\}\) is the indicator function that evaluates whether \(y\) is correct, i.e. equivalent (perhaps modulo formatting details) to \(y^{*}\) .  
+
+<|ref|>text<|/ref|><|det|>[[173, 472, 823, 502]]<|/det|>
+Proper scoring rules Often, we want predictors that output not only an answer \(y\) , but some scalar measure \(q\) of confidence in this answer.  
+
+<|ref|>text<|/ref|><|det|>[[173, 508, 823, 566]]<|/det|>
+A scoring rule measures the quality of a confidence estimate. In the case of modeling binary outcomes (e.g. our confidence that a given answer \(y\) is correct), a scoring rule is a function \(S:\mathbb{R}\times \{0,1\} \to \mathbb{R}\) that maps a confidence estimate \(q\) and an outcome \(o\) to a scalar score. A scoring rule is called proper if its expected value is minimized by confidence scores that match the true outcome probability:  
+
+<|ref|>equation<|/ref|><|det|>[[368, 571, 821, 590]]<|/det|>
+\[\mathbb{E}_{a\sim p(a)}S(p(a),a)\leq \mathbb{E}_{a\sim p(a)}S(q,a) \quad (4)\]  
+
+<|ref|>text<|/ref|><|det|>[[174, 596, 725, 612]]<|/det|>
+for any \(q\) . Perhaps the most familiar example of a proper scoring rule is the log- loss:  
+
+<|ref|>equation<|/ref|><|det|>[[256, 617, 821, 636]]<|/det|>
+\[S(q,a) = a\log q + (1 - a)\log (1 - q). \quad (5)\]  
+
+<|ref|>text<|/ref|><|det|>[[174, 646, 448, 661]]<|/det|>
+But many other examples exist, including  
+
+<|ref|>equation<|/ref|><|det|>[[256, 668, 821, 720]]<|/det|>
+\[\begin{array}{r l} & {S(q,a) = (a - q)^{2},}\\ & {S(q,a) = q\sqrt{q^{2} + (1 - q)^{2}}.} \end{array} \quad (7)\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 724, 823, 753]]<|/det|>
+What all these scores have in common is the property that they are maximized when confidences \(q\) match the true probability \(p(a = 1)\) .  
+
+<|ref|>sub_title<|/ref|><|det|>[[174, 773, 282, 789]]<|/det|>
+## 3 METHOD  
+
+<|ref|>text<|/ref|><|det|>[[174, 804, 823, 847]]<|/det|>
+The main idea behind our approach is to train language models via reinforcement learning with a reward that incentivizes both correctness and calibration, by combining a standard correctness reward with a reward based on the Brier score. In this approach, models are first prompted to produce
+
+<--- Page Split --->
+<|ref|>image<|/ref|><|det|>[[176, 100, 820, 288]]<|/det|>
+<|ref|>image_caption<|/ref|><|det|>[[171, 301, 822, 331]]<|/det|>
+<center>Figure 2: (a): RLVR focuses solely on correctness, which can incentivize guessing. (b): RLCR uses a calibrated reward that jointly optimizes for correctness and calibration. </center>  
+
+<|ref|>text<|/ref|><|det|>[[173, 358, 822, 387]]<|/det|>
+reasoning chains that produce both answers and confidences estimates (as in Fig. 1a). They are then trained to optimize:  
+
+<|ref|>equation<|/ref|><|det|>[[355, 385, 822, 405]]<|/det|>
+\[R_{\mathrm{RLCR}}(y,q,y^{*}) = \mathbb{1}_{y = y^{*}} - (q - \mathbb{1}_{y = y^{*}})^{2}. \quad (8)\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 415, 822, 445]]<|/det|>
+Intuitively, this reward incentivizes correctness but penalizes models when they output incorrect answers with high confidence or correct answers with low confidence.  
+
+<|ref|>text<|/ref|><|det|>[[173, 450, 823, 508]]<|/det|>
+It is not immediately obvious that this reward function incentivizes desired LM behavior—because it involves a tradeoff between accuracy (the first term) and calibration (the second), we might worry that models will learn to output answers certain to be wrong in order to obtain a small calibration loss. But in fact, the calibration term in Eq. (8) comes at no cost in accuracy:  
+
+<|ref|>text<|/ref|><|det|>[[173, 511, 822, 541]]<|/det|>
+Theorem 1. Suppose, for any possible prediction \(y\) , that the success indicator \(\mathbb{1}_{y = y^{*}}\) is drawn from a distribution Bernoulli \((p_{y})\) .  
+
+<|ref|>text<|/ref|><|det|>[[173, 546, 476, 562]]<|/det|>
+Then \(R_{\mathrm{RLCR}}\) in Eq. (8) satisfies two properties:  
+
+<|ref|>text<|/ref|><|det|>[[210, 574, 823, 645]]<|/det|>
+1. Calibration incentive. For any \(y\) , the expected reward \(\mathbb{E}_{\mathbb{1}_{y = y^{*}}}R_{\mathrm{RLCR}}(y,q,y^{*})\) is maximized when \(q = p_{y}\) . 
+2. Correctness incentive. Among all calibrated predictions \((y,p_{y})\) , expected reward is maximized by the prediction whose success probability \(p_{y}\) is greatest.²  
+
+<|ref|>text<|/ref|><|det|>[[173, 656, 370, 672]]<|/det|>
+Proof is given in Appendix A.  
+
+<|ref|>text<|/ref|><|det|>[[173, 678, 823, 735]]<|/det|>
+An important property of Theorem 1 is that we cannot replace the Brier term \((q - \mathbb{1}_{y = y^{*}})^{2}\) with any proper scoring rule—for example the log loss \(\mathbb{1}_{y = y^{*}}\log q + (1 - \mathbb{1}_{y = y^{*}})\log (1 - q)\) does not incentivize correctness. However, as discussed in Appendix A, an analogous version of Theorem 1 exists for any bounded proper scoring rule.  
+
+<|ref|>sub_title<|/ref|><|det|>[[174, 756, 325, 772]]<|/det|>
+## 4 EXPERIMENTS  
+
+<|ref|>text<|/ref|><|det|>[[174, 787, 823, 858]]<|/det|>
+Our main experiments aim to evaluate how RLCR empirically changes the accuracy and calibration of LMs, both in “in- domain” evaluations on the task used for RL, and “out- of- domain” evaluations on other question- answering tasks. Additional experiments evaluate interactions between RLCR and other test- time reasoning paradigms, the role of reasoning in confidence estimation specifically, and the extent to which RLCR causes LM predictions to become more coherent across predictions.
+
+<--- Page Split --->
+<|ref|>image<|/ref|><|det|>[[174, 102, 800, 259]]<|/det|>
+<|ref|>image_caption<|/ref|><|det|>[[173, 267, 824, 326]]<|/det|>
+<center>Figure 3: (a) Reward curves for \(RLCR\) (ours) and \(RLVR\) . Both correctness and calibration rewards improve under our method, demonstrating simultaneous gains in correctness and calibration. The Brier reward is shifted upward by 1 for clarity. (b) Completion lengths during training. The completion lengths of our method gradually increase during training as uncertainty reasoning improves. </center>  
+
+<|ref|>sub_title<|/ref|><|det|>[[174, 350, 375, 365]]<|/det|>
+### 4.1 EXPERIMENTAL SETUP  
+
+<|ref|>text<|/ref|><|det|>[[173, 375, 825, 476]]<|/det|>
+Training Details We use GRPO as base RL algorithm with some modifications (see Appendix B.2). Following recent work on RL training for LM reasoning (Hu et al., 2025; Guo et al., 2025), we initialize from RL from the base model and do not use any KL regularization. Specifically, we use the Qwen2.5- 7B base model, part of the Qwen family recognized for strong performance in RL tasks (Hu et al., 2025; Gandhi et al., 2025). For HotPotQA, we use a maximum response length of 1536 while for Math, we use 4096. To enable easier verification and more structured outputs, we augment Eq. (8) with simple format reward that encourages models to enclose CoTs within the right tags.  
+
+<|ref|>text<|/ref|><|det|>[[174, 489, 486, 504]]<|/det|>
+Methods We evaluate the following methods:  
+
+<|ref|>text<|/ref|><|det|>[[210, 513, 763, 530]]<|/det|>
+1. Base: The base pre-trained model. We use Qwen2.5-7B Base in our experiments.  
+
+<|ref|>text<|/ref|><|det|>[[210, 533, 822, 562]]<|/det|>
+2. RLVR: Initialized from the base model and trained using \(R_{\mathrm{correctness}}\) with <think> and <answer> tags. During evaluation, model is also asked to verbalize confidence.  
+
+<|ref|>text<|/ref|><|det|>[[211, 565, 823, 621]]<|/det|>
+3. RLVR + BCE Classifier: A confidence classifier trained on outputs from the RLVR model. Specifically, given a dataset of problems, solution CoTs (from RLVR), and correctness labels \((x,y,\mathbb{1}_{y = y^{*}})\) , we train a classifier \(f_{\theta}(x,y)\) to predict the model's confidence score using the binary cross-entropy (BCE) loss:  
+
+<|ref|>equation<|/ref|><|det|>[[253, 625, 822, 644]]<|/det|>
+\[\mathcal{L}_{\mathrm{BCE}}(\theta) = -\mathbb{E}_{(x,y,1_{y = y^{*}})}[\mathbb{1}_{y = y^{*}}\log f_{\theta}(x,y) + (1 - \mathbb{1}_{y = y^{*}})\log (1 - f_{\theta}(x,y))] \quad (9)\]  
+
+<|ref|>text<|/ref|><|det|>[[230, 649, 823, 693]]<|/det|>
+where \(f_{\theta}(x,y)\in (0,1)\) is the classifier's confidence. The classifier is initialized from Qwen2.5- 7B Base and is thus highly expressive. This approach is expensive, as it requires training and inference of two large models.  
+
+<|ref|>text<|/ref|><|det|>[[210, 696, 822, 726]]<|/det|>
+4. RLVR + Brier Classifier: Instead of using binary cross-entropy (BCE) loss, we use mean squared error (MSE), which allows more direct optimization of the Brier score:  
+
+<|ref|>equation<|/ref|><|det|>[[370, 729, 822, 758]]<|/det|>
+\[\mathcal{L}_{\mathrm{Brier}}(\theta) = \mathbb{E}_{(x,y,1_{y = y^{*}})}\left[(f_{\theta}(x,y) - \mathbb{1}_{y = y^{*}})^{2}\right] \quad (10)\]  
+
+<|ref|>text<|/ref|><|det|>[[210, 764, 823, 805]]<|/det|>
+5. RLVR + Probe: Given the final-layer embedding \(\phi (x,y)\) of the RLVR model, we train a linear probe to predict confidence scores: in Eq. (9), we replace the fine-tuned LM with a linear model:  
+
+<|ref|>equation<|/ref|><|det|>[[432, 803, 822, 821]]<|/det|>
+\[f_{\theta}(x,y) = \log \sigma (\theta^{\top}\phi (x,y)) \quad (11)\]  
+
+<|ref|>text<|/ref|><|det|>[[230, 823, 823, 852]]<|/det|>
+where \(\sigma (\cdot)\) denotes the sigmoid function. This method is closely related to the classifier, but replaces it with a simple, less expressive linear probe.  
+
+<|ref|>text<|/ref|><|det|>[[210, 855, 822, 884]]<|/det|>
+6. Answer Probability: We generate outputs using RLVR, extract the tokens enclosed within the <answer> tags, and compute their average probability:  
+
+<|ref|>equation<|/ref|><|det|>[[386, 887, 822, 926]]<|/det|>
+\[\mathrm{AnswerProb}(y) = \frac{1}{|\mathcal{A}|}\sum_{t\in \mathcal{A}}P_{\theta}(y_{t}\mid y_{< t},x) \quad (12)\]
+
+<--- Page Split --->
+<|ref|>text<|/ref|><|det|>[[230, 102, 823, 145]]<|/det|>
+Here, \(y = (y_{1}, y_{2}, \ldots , y_{T})\) is the full generated sequence. The set \(\mathcal{A} \subseteq \{1, \ldots , T\}\) denotes the token positions that appear between the <answer> tags. \(P_{\theta}(y_{t} \mid y_{< t}, x)\) represents the model's probability of generating token \(y_{t}\) .  
+
+<|ref|>text<|/ref|><|det|>[[211, 150, 684, 166]]<|/det|>
+7. RLCR (ours): Initialized from base model and trained using \(R_{\mathrm{RLCR}}\) .  
+
+<|ref|>text<|/ref|><|det|>[[174, 178, 579, 193]]<|/det|>
+Evaluation Metrics We use the following evaluation metrics:  
+
+<|ref|>text<|/ref|><|det|>[[211, 207, 510, 222]]<|/det|>
+1. Accuracy (↑): A measure of performance.  
+
+<|ref|>text<|/ref|><|det|>[[210, 227, 822, 257]]<|/det|>
+2. Area under ROC curve (AUROC) (↑): Measures ability of classifier to distinguish between positive/negative classes across thresholds.  
+
+<|ref|>equation<|/ref|><|det|>[[411, 263, 822, 301]]<|/det|>
+\[\mathrm{AUROC} = \int_{0}^{1}\mathrm{TPR}(\mathrm{FPR}^{-1}(t))dt \quad (13)\]  
+
+<|ref|>text<|/ref|><|det|>[[230, 308, 701, 323]]<|/det|>
+where TPR is the True Positive Rate and FPR is the False Positive Rate.  
+
+<|ref|>text<|/ref|><|det|>[[210, 329, 719, 344]]<|/det|>
+3. Brier Score (↓): Squared difference between confidence and ground truth.  
+
+<|ref|>equation<|/ref|><|det|>[[404, 352, 822, 397]]<|/det|>
+\[\mathrm{Brier~Score} = \frac{1}{N}\sum_{i = 1}^{N}(q_{i} - \mathbb{1}_{y_{i} = y_{i}^{*}})^{2} \quad (14)\]  
+
+<|ref|>text<|/ref|><|det|>[[210, 407, 822, 437]]<|/det|>
+4. Expected Calibration Error (ECE) (↓): Calibration metric that groups confidences into bins and computes difference between the average correctness and confidence.  
+
+<|ref|>equation<|/ref|><|det|>[[386, 444, 822, 487]]<|/det|>
+\[\mathrm{ECE} = \sum_{m = 1}^{M}\frac{|B_{m}|}{N}\left|\mathrm{acc}(B_{m}) - \mathrm{conf}(B_{m})\right| \quad (15)\]  
+
+<|ref|>text<|/ref|><|det|>[[230, 494, 822, 523]]<|/det|>
+where \(M\) is the number of bins, \(B_{m}\) is the set of samples in bin \(m\) , and \(N\) is the number of samples. We use \(\mathrm{M} = 10\) .  
+
+<|ref|>text<|/ref|><|det|>[[174, 537, 825, 650]]<|/det|>
+Evaluation datasets We evaluate our method on benchmarks that highlight distinct sources of uncertainty. HotPotQA (Yang et al., 2018) tests calibration under incomplete or distracting evidence, while SimpleQA (Wei et al., 2024) and TriviaQA (Joshi et al., 2017) probe overconfidence on obscure factual knowledge; GPQA (Rein et al., 2024), Math500 (Hendrycks et al., 2021), GSM8K (Cobbe et al., 2021), and Big- Math (Albalak et al., 2025) assess calibration in complex, multi- step or scientific reasoning, where uncertainty accumulates across steps. CommonsenseQA (Talmor et al., 2019) examines confidence in ambiguous, implicit reasoning scenarios. Together, these datasets capture key types of uncertainty, from ambiguous evidence to rare knowledge and complex reasoning.  
+
+<|ref|>sub_title<|/ref|><|det|>[[174, 668, 299, 683]]<|/det|>
+### 4.2 HOTPOTQA  
+
+<|ref|>text<|/ref|><|det|>[[174, 695, 823, 766]]<|/det|>
+Dataset We use a modified HotPotQA distractor dataset (Yang et al., 2018) with multi- hop questions and 10 paragraphs (2 relevant, 8 distractors). To test uncertainty reasoning, HotPotQA- Modified removes 0, 1, or both relevant paragraphs, creating varying information completeness. The dataset is evenly split across these conditions, with 8 paragraphs per example. We train on 20,000 examples and use exact string match to compute correctness.  
+
+<|ref|>text<|/ref|><|det|>[[174, 782, 825, 923]]<|/det|>
+In- distribution performance Fig. 3 shows the training curves for RLCR and RLVR. Both the correctness and calibration reward for RLCR increase smoothly, indicating that the model is able to jointly improve accuracy and calibration. Table 1 shows results on the original HotpotQA distractor dataset. As expected, RL- trained models outperform off- the- shelf models in multi- hop accuracy. RLCR matches RLVR in accuracy, showing that the calibration term does not hurt performance. However, both the base and RLVR are highly overconfident and poorly calibrated. In contrast, our method and the classifiers are much better calibrated, with our method slightly ahead. The Answer Probability baseline also exhibits poor calibration and overconfidence, as the model typically arrives at its answer during CoT reasoning, making the subsequent probability of outputting that answer within <answer> tags extremely high.
+
+<--- Page Split --->
+<|ref|>table<|/ref|><|det|>[[185, 115, 812, 290]]<|/det|>
+<|ref|>table_caption<|/ref|><|det|>[[393, 100, 603, 114]]<|/det|>
+(a) Models Trained on HotpotQA   
+
+<table><tr><td rowspan="2">Method</td><td colspan="4">HotpotQA</td><td colspan="4">O.O.D</td></tr><tr><td>Acc. <br>(↑)</td><td>AUROC <br>(↑)</td><td>Brier <br>(↓)</td><td>ECE <br>(↓)</td><td>Acc. <br>(↑)</td><td>AUROC <br>(↑)</td><td>Brier <br>(↓)</td><td>ECE <br>(↓)</td></tr><tr><td>Base</td><td>39.7%</td><td>0.54</td><td>0.53</td><td>0.53</td><td>53.3%</td><td>0.54</td><td>0.41</td><td>0.40</td></tr><tr><td>RLVR</td><td>63.0%</td><td>0.50</td><td>0.37</td><td>0.37</td><td>53.9%</td><td>0.50</td><td>0.46</td><td>0.46</td></tr><tr><td>RLVR + BCE Classifier</td><td>63.0%</td><td>0.66</td><td>0.22</td><td>0.07</td><td>53.9%</td><td>0.58</td><td>0.27</td><td>0.24</td></tr><tr><td>RLVR + Brier</td><td>63.0%</td><td>0.65</td><td>0.22</td><td>0.09</td><td>53.9%</td><td>0.60</td><td>0.32</td><td>0.33</td></tr><tr><td>RLVR + Probe</td><td>63.0%</td><td>0.55</td><td>0.24</td><td>0.10</td><td>53.9%</td><td>0.53</td><td>0.38</td><td>0.38</td></tr><tr><td>Answer Prob</td><td>63.0%</td><td>0.72</td><td>0.36</td><td>0.36</td><td>53.9%</td><td>0.60</td><td>0.42</td><td>0.42</td></tr><tr><td>RLCR (ours)</td><td>62.1%</td><td>0.69</td><td>0.21</td><td>0.03</td><td>56.2%</td><td>0.68</td><td>0.21</td><td>0.21</td></tr></table>  
+
+<|ref|>table<|/ref|><|det|>[[185, 321, 812, 509]]<|/det|>
+<|ref|>table_caption<|/ref|><|det|>[[395, 306, 601, 320]]<|/det|>
+(b) Models Trained on Big-Math   
+
+<table><tr><td rowspan="2">Method</td><td colspan="4">Math</td><td colspan="4">O.O.D Averaged</td></tr><tr><td>Acc. <br>(↑)</td><td>AUROC <br>(↑)</td><td>Brier <br>(↓)</td><td>ECE <br>(↓)</td><td>Acc. <br>(↑)</td><td>AUROC <br>(↑)</td><td>Brier <br>(↓)</td><td>ECE <br>(↓)</td></tr><tr><td>Base</td><td>56.1%</td><td>0.56</td><td>0.40</td><td>0.39</td><td>47.8%</td><td>0.53</td><td>0.46</td><td>0.45</td></tr><tr><td>RLVR</td><td>72.9%</td><td>0.47</td><td>0.28</td><td>0.26</td><td>52.5%</td><td>0.52</td><td>0.49</td><td>0.49</td></tr><tr><td>RLVR + Classifier</td><td>72.9%</td><td>0.78</td><td>0.15</td><td>0.10</td><td>52.5%</td><td>0.55</td><td>0.34</td><td>0.33</td></tr><tr><td>RLVR + Brier-Classifier</td><td>72.9%</td><td>0.78</td><td>0.15</td><td>0.10</td><td>52.5%</td><td>0.57</td><td>0.28</td><td>0.27</td></tr><tr><td>RLVR + Probe</td><td>72.9%</td><td>0.65</td><td>0.19</td><td>0.13</td><td>52.5%</td><td>0.53</td><td>0.33</td><td>0.30</td></tr><tr><td>Answer Prob</td><td>72.9%</td><td>0.52</td><td>0.26</td><td>0.26</td><td>52.5%</td><td>0.52</td><td>0.44</td><td>0.43</td></tr><tr><td>RLCR (ours)</td><td>72.7%</td><td>0.67</td><td>0.17</td><td>0.10</td><td>50.9%</td><td>0.60</td><td>0.28</td><td>0.25</td></tr><tr><td>SFT+RLCR (ours)</td><td>72.2%</td><td>0.78</td><td>0.14</td><td>0.08</td><td>43.8%</td><td>0.66</td><td>0.24</td><td>0.18</td></tr></table>  
+
+<|ref|>text<|/ref|><|det|>[[173, 517, 825, 658]]<|/det|>
+Table 1: Accuracy and calibration metrics for models trained on HotpotQA and Big- Math. (a) Performance on HotpotQA and 6 out- of- distribution (O.O.D) datasets. RLCR achieves competitive accuracy and significantly outperforms all baselines in calibration, especially on O.O.D. datasets, demonstrating the benefits of jointly optimizing accuracy and calibration. (b) Performance on Math and 5 out- of- distribution (O.O.D.) datasets. Math results are averaged over 3 datasets: Math- 500, GSM8K and Big- Math. SFT+RLCR variant achieves the best calibration across both in- distribution and O.O.D settings, demonstrating the benefit of SFT warmup. However, this comes at the cost of reduced generalization accuracy, possibly due to catastrophic forgetting. RLCR offers a stronger trade- off in O.O.D settings, maintaining competitive accuracy while improving calibration relative to all baselines.  
+
+<|ref|>text<|/ref|><|det|>[[173, 699, 825, 812]]<|/det|>
+Generalization We evaluate generalization performance on six datasets: TriviaQA, SimpleQA, MATH500, GSM8K, CommonsenseQA, and GPQA. Table 1 presents the average performance across these datasets (individual results in Appendix D). The base model's accuracy closely matches that of the models trained with RL, indicating that RL training on HotpotQA does not enhance OOD reasoning. Moreover, RLVR actually hurts calibration relative to the base model on out- of- distribution tasks. In contrast, RLCR achieves substantial gains over all baselines across calibration metrics while maintaining (or slightly improving) on task accuracy. We hypothesize that better calibration generalization of RLCR could be due to:  
+
+<|ref|>text<|/ref|><|det|>[[210, 831, 825, 860]]<|/det|>
+1. Uncertainty in chain-of-thought reasoning Reasoning about uncertainty can improve calibration by allowing reflection on confidence, in line with recent work (Yoon et al., 2025).  
+
+<|ref|>text<|/ref|><|det|>[[210, 880, 824, 922]]<|/det|>
+2. Training dynamics of RL During RL training, the model's confidence analysis and scores have to constantly adapt to the model's improving task performance. This non-stationarity might lead to more robust learning and better generalization.
+
+<--- Page Split --->
+<|ref|>image<|/ref|><|det|>[[177, 102, 810, 298]]<|/det|>
+<|ref|>image_caption<|/ref|><|det|>[[173, 310, 825, 395]]<|/det|>
+<center>Figure 4: Test-time scaling curves. (a) Accuracy vs Number of Samples (N). Accuracy improves for all methods with increasing compute. Confidence-weighted majority vote outperforms both vanilla majority vote and max-confidence, highlighting complementary benefits of combining voting with confidence scores. (b) Brier Scores vs Ensemble Size (K). Here we evaluate the effect of applying test-time scaling to confidence estimation alone, resampling multiple analyses (blue text in Fig. 1). Calibration improves as the size of the analysis ensemble grows. </center>  
+
+<|ref|>text<|/ref|><|det|>[[211, 422, 823, 465]]<|/det|>
+3. Shared representations Using a single model for both solution generation and calibration allows the calibration task to leverage internal representations used by the solution generating process, possibly improving generalization.  
+
+<|ref|>sub_title<|/ref|><|det|>[[174, 484, 257, 497]]<|/det|>
+### 4.3 MATH  
+
+<|ref|>text<|/ref|><|det|>[[174, 510, 824, 592]]<|/det|>
+Dataset We use Big- Math (Albalak et al., 2025), a large, curated training dataset for RL containing over 250,000 math problems, including questions from benchmarks such as Math and GSM8K. We retain problems for which the LLaMA- 8B solve rate (provided in the dataset) is between 0- 70% and restrict the dataset to problems with numerical answers, enabling near- perfect automatic verification. Our final training set consists of 15,000 problems. We compute correctness using math- verify, a robust expression evaluation system.  
+
+<|ref|>text<|/ref|><|det|>[[174, 609, 824, 695]]<|/det|>
+SFT Warmup While applying RL directly to the base model improves calibrated reward, the uncertainty analyses produced in Math remain qualitatively generic, often lacking reasoning tied to specific solution steps (See Appendix D.2 for an example). To enhance their quality, we train a variant with a lightweight SFT warmup phase before RL. Specifically, we generate solutions from the base model on 500 examples and prompt Deepseek- R1 to produce uncertainty analyses for them. Further details in Appendix B.2.  
+
+<|ref|>text<|/ref|><|det|>[[174, 711, 824, 822]]<|/det|>
+Results On Math benchmarks (averaged over GSM8K, Math, and Big- Math), all RL methods improve accuracy significantly over the base model. SFT+RLCR achieves the best calibration, slightly surpassing the classifiers, while base and RLVR remain poorly calibrated. Out- of- distribution (TriviaQA, SimpleQA, CommonsenseQA, GPQA, HotPotQA), the accuracies of RLCR and RLVR are marginally better than the base model, but surprisingly the accuracy of the SFT+RLCR model drops significantly, possibly due to catastrophic forgetting induced by SFT warmup. Despite this, SFT+RLCR achieves the strongest calibration. RLCR offers a stronger trade- off in O.O.D. settings, maintaining accuracy while matching or outperforming all baselines on calibration.  
+
+<|ref|>sub_title<|/ref|><|det|>[[174, 841, 690, 855]]<|/det|>
+### 4.4 CAN VERBALIZED CONFIDENCES BE USED FOR TEST-TIME SCALING?  
+
+<|ref|>text<|/ref|><|det|>[[174, 867, 822, 896]]<|/det|>
+We next evaluate whether confidence scores from RLCR can be incorporated into test- time scaling algorithms to yield improvements in both accuracy and calibration.
+
+<--- Page Split --->
+<|ref|>image<|/ref|><|det|>[[173, 103, 802, 291]]<|/det|>
+<|ref|>image_caption<|/ref|><|det|>[[173, 304, 823, 348]]<|/det|>
+<center>Figure 5: Brier scores (a) and ECE (b) of baseline / analysis classifiers on HotPotQA-Modified across three model sizes. Analysis classifiers outperform baselines at smaller sizes, suggesting that uncertainty CoT is essential for better calibration when capacity is limited. </center>  
+
+<|ref|>text<|/ref|><|det|>[[173, 374, 822, 404]]<|/det|>
+Accuracy Given \(N\) responses \(y_{1}, y_{2}, \ldots y_{N}\) and a reward model \(r(x, y)\) , best- of- N selects the response with highest reward:  
+
+<|ref|>equation<|/ref|><|det|>[[378, 410, 822, 436]]<|/det|>
+\[y_{\mathrm{chosen}} = \underset {\{y_{1},\ldots ,y_{N}\} \sim p(\cdot |x)}{\arg \max}R(x,y_{i}). \quad (16)\]  
+
+<|ref|>text<|/ref|><|det|>[[174, 444, 823, 487]]<|/det|>
+Similarly, majority vote selects the most frequent answer among the \(N\) answers. Prior work has also combined the two, yielding weighted majority vote, where the voting is weighted using scores from the reward model.  
+
+<|ref|>text<|/ref|><|det|>[[174, 494, 823, 580]]<|/det|>
+Our key insight is that the verbalized confidence \(q\) output by the model can serve as an effective proxy reward. In best- of- N, we can select the response with the highest verbalized confidence from the set of \(N\) candidates. We refer to this as max- confidence. Likewise, we extend majority vote to a confidence- weighted majority vote, where each response's vote is weighted by its associated confidence score. Importantly, both these approaches do not require any additional supervision or external reward models.  
+
+<|ref|>text<|/ref|><|det|>[[174, 586, 824, 696]]<|/det|>
+We use the RLCR model trained on Hotpot for generation, and plot average accuracy across the 7 datasets used in Table 1. Fig. 4a shows that accuracy improves with compute across all methods. Confidence- weighted majority vote outperforms both vanilla majority voting and max- confidence, indicating that combining confidence with voting can yield complementary benefits. Although max- confidence underperforms both voting variants, it is more flexible and remains valuable in settings where aggregation across responses (needed for voting) is infeasible, such as program synthesis or other open- ended generation tasks. Overall, the accuracy gains of these scaling algorithms are closely tied to calibration—improvements in calibration will translate to improvements in accuracy.  
+
+<|ref|>text<|/ref|><|det|>[[174, 711, 824, 823]]<|/det|>
+Calibration In our structured RLCR CoT, models first output a solution, followed by an analysis and confidence score. To improve confidence scores for a fixed answer \(y\) , we sample \(K\) analysis CoTs \(z_{1}, \ldots , z_{K} \sim p(\cdot | x, y)\) , each producing a verbalized confidence \(q_{i}\) . We then ensemble these confidences to obtain the aggregated confidence estimate \(\bar{q} = \frac{1}{K} \sum_{i} q_{i}\) . Figure 4b plots Brier score (averaged over 7 datasets) as a function of ensemble size \(K\) . We observe a decrease in Brier score with larger ensembles, indicating that ensembling over uncertainty CoTs effectively improves calibration. For a given solution and answer, ensembling verbalized confidences is lightweight and only requires additional sampling, unlike classifiers or probes, which would require training multiple heads/models.  
+
+<|ref|>sub_title<|/ref|><|det|>[[175, 840, 515, 854]]<|/det|>
+### 4.5 DOES REASONING IMPROVE CALIBRATION?  
+
+<|ref|>text<|/ref|><|det|>[[175, 865, 823, 922]]<|/det|>
+Recent work has shown that CoT reasoning can be unfaithful, with generated CoTs that do not influence their final answers (Chen et al., 2025). This raises the possibility that uncertainty analysis may not meaningfully inform the verbalized confidence score. To test this, we train two classifiers on HotPotQA- Modified:
+
+<--- Page Split --->
+<|ref|>image<|/ref|><|det|>[[175, 100, 824, 280]]<|/det|>
+<|ref|>image_caption<|/ref|><|det|>[[173, 292, 825, 365]]<|/det|>
+<center>Figure 6: (a): Distribution of standard deviation in confidence across multiple uncertainty reasoning chains for the same solution/answer. Most samples exhibit low deviation, indicating that the model's confidence estimates are self-consistent. (b) Swarm plot of confidence sums across 3 datasets. RLCR consistently remains closer to the ideal sum of 1. Nonetheless, overconfidence remains, suggesting room for further improvement. </center>  
+
+<|ref|>text<|/ref|><|det|>[[210, 387, 794, 403]]<|/det|>
+1. Baseline classifier: Trained on RLVR outputs (these contain no uncertainty analysis).  
+
+<|ref|>text<|/ref|><|det|>[[210, 405, 822, 435]]<|/det|>
+2. Analysis classifier: Trained on outputs of RLCR with confidence scores (present within <confidence> tags) removed to prevent direct hacking.  
+
+<|ref|>text<|/ref|><|det|>[[173, 444, 825, 571]]<|/det|>
+As both RL models have comparable task accuracy, differences in classifier performance would indicate that the RLCR- trained model's reasoning chains contain information specifically useful for calibration. We train classifiers for 3 different model sizes of the Qwen- base model: 0.5B, 1.5B and 7B. Figure 5 shows Brier and ECE scores on HotPotQA- Modified. Interestingly, while 7B classifiers perform similarly, the analysis classifier outperforms the baseline at smaller sizes, suggesting classifier capacity is key. For a sufficiently expressive classifier (as with the 7B model), it is possible to infer confidence- relevant features directly from the solution. In contrast, smaller classifiers can make better use of RLCR reasoning chains. We believe that broader questions about the relationship between classifier capacity and CoT contents are an important topic for future work.  
+
+<|ref|>sub_title<|/ref|><|det|>[[175, 586, 580, 600]]<|/det|>
+### 4.6 ARE VERBALIZED CONFIDENCES SELF-CONSISTENT?  
+
+<|ref|>text<|/ref|><|det|>[[174, 611, 824, 683]]<|/det|>
+Intra- solution coherence A desirable property of uncertainty- aware reasoning is that a model should assign consistent confidence estimates when generating multiple uncertainty reasoning chains for the same answer. Given a fixed answer \(y\) , we sample \(K\) analysis CoTs \(z_{1},\ldots ,z_{K}\sim p(\cdot \mid x,y)\) , where each chain produces a verbalized confidence score \(q_{i}\) . Ideally, these confidence scores should exhibit low variability, indicating stable uncertainty estimates for a given answer.  
+
+<|ref|>text<|/ref|><|det|>[[174, 688, 824, 732]]<|/det|>
+Figure 6b plots the standard deviation across seven datasets, using analysis CoTs generated by the RLCR model trained on HotpotQA. Most samples have low standard deviation, suggesting that the model's verbalized confidence estimates are generally consistent.  
+
+<|ref|>text<|/ref|><|det|>[[174, 738, 824, 780]]<|/det|>
+Inter- solution consistency For tasks where answers are mutually exclusive—i.e., only one answer can be correct per instance—it is desirable that the model distributes its confidence across distinct answers such that the total confidence sums to 1.  
+
+<|ref|>text<|/ref|><|det|>[[174, 786, 824, 830]]<|/det|>
+Let a model generate \(N\) responses \(\{y_{i}\}_{i = 1}^{N}\) with associated confidence scores \(\{q_{i}\}_{i = 1}^{N}\) , where \(q_{i}\in [0,1]\) . Let \(\mathcal{A} = \{a_{1},\ldots ,a_{K}\}\) denote the set of \(K\leq N\) unique answers among the \(y_{i}\) . The mean confidence assigned to answer \(a_{k}\) is:  
+
+<|ref|>equation<|/ref|><|det|>[[427, 832, 823, 869]]<|/det|>
+\[\bar{q}_{k} = \frac{\sum_{i}\mathbb{1}_{y_{i}\equiv a_{k}}\cdot q_{i}}{\sum_{i}\mathbb{1}_{y_{i}\equiv a_{k}}} \quad (17)\]  
+
+<|ref|>text<|/ref|><|det|>[[174, 877, 824, 923]]<|/det|>
+Assuming the answers in \(\mathcal{A}\) are mutually exclusive and exhaustive (i.e., exactly one is correct), the model's confidences should ideally sum to one: \(\sum_{k = 1}^{K}\bar{q}_{k} = 1\) . This captures the requirement for internal consistency in the model's beliefs.
+
+<--- Page Split --->
+<|ref|>text<|/ref|><|det|>[[174, 103, 825, 188]]<|/det|>
+Fig. 6b shows a swarm plot of predicted confidence sums across three representative datasets. On the in- distribution HotpotQA dataset, RLCR's confidence sums cluster tightly around 1, indicating well- calibrated belief distribution. For out- of- distribution datasets, both RLCR and RLVR exhibit overconfidence, with sums exceeding 1, though RLCR remains significantly closer to the ideal. This reflects RLCR's improved calibration, yet highlights room for improvement in inter- solution consistency, particularly out- of- distribution.  
+
+<|ref|>sub_title<|/ref|><|det|>[[175, 217, 344, 233]]<|/det|>
+## 5 RELATED WORK  
+
+<|ref|>text<|/ref|><|det|>[[174, 255, 824, 340]]<|/det|>
+Building reliable reasoning models requires not only high accuracy but also calibrated uncertainty—a property that standard RL objectives often erode (Achiam et al., 2023), leaving models over- confident (Xiong et al., 2024) and prone to hallucination (Jaech et al., 2024). To situate our proposed RLCR approach within this landscape, we survey four strands of prior work on confidence estimation in LLMs: (i) post- hoc verbalizations, (ii) sampling- based surrogates, (iii) internal signal probing, and (iv) RL- based calibration.  
+
+<|ref|>text<|/ref|><|det|>[[174, 346, 825, 513]]<|/det|>
+Post- hoc verbalizations prompt models to state their confidence after answering (Xiong et al., 2024; Yang et al., 2024; Tanneru et al., 2024; Lin et al., 2022). Lin et al. (2022) fine- tune GPT- 3 to predict confidence given a question and answer, using GPT- 3's empirical accuracy on that question as the target label. Xiong et al. (2024) find that LMs exhibit overconfidence when verbalizing their confidence, although calibration improves with increasing model capability. Tian et al. (2023) finds that RLHF models' verbalized confidence scores are better calibrated than their conditional probabilities across several benchmarks. Recent work has examined the calibration of verbalized confidence in reasoning models. Mei et al. (2025) find that even reasoning models also suffer from overconfidence and can become even more overconfident with deeper reasoning. Similarly, Kirichenko et al. (2025) introduce AbstentionBench and show that LMs struggle to abstain appropriately, with reasoning fine- tuning often degrading abstention performance. Positively, Yoon et al. (2025) and Mei et al. (2025) find that reasoning models can improve their calibration by introspection and slow thinking CoT behaviors.  
+
+<|ref|>text<|/ref|><|det|>[[174, 520, 824, 590]]<|/det|>
+Sampling- based methods use response agreement (e.g., majority vote or best- of- \(N\) ) as a proxy for confidence, but are costly and require clear ground truth (Kang et al., 2025). Aichberger et al. (2025) estimate uncertainty by generating semantically diverse, plausible responses and measuring their consistency. Kuhn et al. (2023) propose semantic entropy, a sampling- based method that accounts for linguistic invariances to better estimate uncertainty in natural language generation.  
+
+<|ref|>text<|/ref|><|det|>[[174, 596, 824, 736]]<|/det|>
+Internal probing extracts confidence from model features like token probabilities (Gupta et al., 2024), offering fine- grained scores but lacking generality. Kadavath et al. (2022) prompt language models to output "true" or "false" for a given answer and use the probability of predicting "true" \(P\) (true), as a proxy for the model's confidence. Mielke et al. (2022) train a LM to generate responses conditioned on confidence estimates provided by an external probe. Fadeeva et al. (2024) propose Claim Conditioned Probability, a token- level uncertainty method that leverages internal model signals to fact- check claims and detect hallucinations. Azaria & Mitchell (2023) train a classifier on hidden layer activations to detect the truthfulness of statements based on the LLM's internal state. Orgad et al. (2025) show that internal representations encode rich, token- level truthfulness signals, which can detect and categorize errors beyond what is reflected in the output.  
+
+<|ref|>text<|/ref|><|det|>[[174, 742, 824, 923]]<|/det|>
+RL- based methods train models to output calibrated verbal confidences with RL. Stengel- Eskin et al. (2024) introduce a speaker- listener framework, where the speaker's rewards are determined by the listener's inferred confidence in the speaker's responses. Leng et al. (2025) introduce explicit confidence scores in reward model training, obtaining reward models that are better aligned to verbalized confidences. Most closely related to our work, Xu et al. (2024) and Stangel et al. (2025) train LMs with RL using proper scoring rules as reward functions. Xu et al. (2024) adopt the Brier score, while Stangel et al. (2025) use a clipped version of the log loss. While effective, these approaches optimize solely for calibration, which can inadvertently harm task accuracy—particularly in larger models that may exploit the objective by outputting deliberately incorrect answers with zero confidence to achieve perfect calibration scores. Furthermore, both methods are developed and evaluated exclusively on non- reasoning tasks. In contrast, we propose a calibrated reward function that provably incentivizes both correctness and calibration, and we demonstrate its effectiveness on both reasoning and non- reasoning benchmarks.
+
+<--- Page Split --->
+<|ref|>sub_title<|/ref|><|det|>[[174, 102, 318, 117]]<|/det|>
+## 6 CONCLUSION  
+
+<|ref|>text<|/ref|><|det|>[[174, 134, 824, 260]]<|/det|>
+6 CONCLUSIONWe show that incorporating proper scoring rules into RL, via an objective we call RLCR, enables reasoning models to improve both accuracy and calibration. Our approach trains models to reason about and verbalize uncertainty, preserving task performance while significantly improving calibration in- and out- of- distribution. We demonstrate that reasoning about uncertainty improves calibration, and that our method improves the self- consistency of confidence, and improves with test- time scaling. However, there remains significant room for improvement—even after RLCR, out- of- domain calibration error is often high in an absolute sense, and models may still assign high confidence to multiple contradictory answers. Nevertheless, these results suggest a path toward reasoning systems that are not only accurate, but reliably reason about and communicate uncertainty.  
+
+<|ref|>sub_title<|/ref|><|det|>[[175, 282, 285, 297]]<|/det|>
+## REFERENCES  
+
+<|ref|>text<|/ref|><|det|>[[174, 306, 824, 348]]<|/det|>
+Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, et al. Gpt4. arXiv preprint arXiv:2303.08774, 2023.  
+
+<|ref|>text<|/ref|><|det|>[[175, 360, 824, 402]]<|/det|>
+Lukas Aichberger, Kajetan Schweighofer, Mykyta Ielanskyi, and Sepp Hochreiter. Improving uncertainty estimation through semantically diverse language generation. In The Thirteenth International Conference on Learning Representations, 2025.  
+
+<|ref|>text<|/ref|><|det|>[[175, 414, 824, 470]]<|/det|>
+Alon Albalak, Duy Phung, Nathan Lile, Rafael Rafailov, Kanishk Gandhi, Louis Castricato, Anikait Singh, Chase Blagden, Violet Xiang, Dakota Mahan, et al. Big- math: A large- scale, high- quality math dataset for reinforcement learning in language models. arXiv preprint arXiv:2502.17387, 2025.  
+
+<|ref|>text<|/ref|><|det|>[[175, 483, 824, 511]]<|/det|>
+Amos Azaria and Tom Mitchell. The internal state of an llm knows when it's lying. Empirical Methods in Natural Language Processing Findings, 2023. URL https://arxiv.org/abs/2304.13734.  
+
+<|ref|>text<|/ref|><|det|>[[175, 524, 824, 551]]<|/det|>
+Glenn W Brier. Verification of forecasts expressed in terms of probability. Monthly weather review, 78(1):1- 3, 1950.  
+
+<|ref|>text<|/ref|><|det|>[[175, 564, 824, 620]]<|/det|>
+Yanda Chen, Joe Benton, Ansh Radhakrishnan, Jonathan Uesato, Carson Denison, John Schulman, Arushi Somani, Peter Hase, Misha Wagner, Fabien Roger, Vlad Mikulik, Samuel R. Bowman, Jan Leike, Jared Kaplan, and Ethan Perez. Reasoning models don't always say what they think, 2025. URL https://arxiv.org/abs/2505.05410.  
+
+<|ref|>text<|/ref|><|det|>[[175, 633, 824, 689]]<|/det|>
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John Schulman. Training verifiers to solve math word problems. CoRR, abs/2110.14168, 2021. URL https://arxiv.org/abs/2110.14168.  
+
+<|ref|>text<|/ref|><|det|>[[175, 701, 824, 770]]<|/det|>
+Ekaterina Fadeeva, Aleksandr Rubashevskii, Artem Shelmanov, Sergey Petrakov, Haonan Li, Hamdy Mubarak, Evgenii Tsymbalov, Gleb Kuzmin, Alexander Panchenko, Timothy Baldwin, Preslav Nakov, and Maxim Panov. Fact- checking the output of large language models via token- level uncertainty quantification. CoRR, abs/2403.04696, 2024. URL https://doi.org/10.48550/arXiv.2403.04696.  
+
+<|ref|>text<|/ref|><|det|>[[175, 784, 824, 825]]<|/det|>
+Kanishk Gandhi, Ayush Chakravarthy, Anikait Singh, Nathan Lile, and Noah D Goodman. Cognitive behaviors that enable self- improving reasoners, or, four habits of highly effective stars. arXiv preprint arXiv:2503.01307, 2025.  
+
+<|ref|>text<|/ref|><|det|>[[175, 839, 824, 866]]<|/det|>
+Tilmann Gneiting and Adrian E Raftery. Strictly proper scoring rules, prediction, and estimation. Journal of the American statistical Association, 102(477):359- 378, 2007.  
+
+<|ref|>text<|/ref|><|det|>[[175, 880, 824, 922]]<|/det|>
+Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, Xiao Bi, et al. Deepseek- rl: Incentivizing reasoning capability in llms via reinforcement learning. arXiv preprint arXiv:2501.12948, 2025.
+
+<--- Page Split --->
+<|ref|>text<|/ref|><|det|>[[174, 103, 825, 158]]<|/det|>
+Neha Gupta, Harikrishna Narasimhan, Wittawat Jitkrittum, Ankit Singh Rawat, Aditya Krishna Menon, and Sanjiv Kumar. Language model cascades: Token- level uncertainty and beyond. In The Twelfth International Conference on Learning Representations, 2024. URL https://openreview.net/forum?id=KgaBScZ4VI.  
+
+<|ref|>text<|/ref|><|det|>[[174, 170, 825, 226]]<|/det|>
+Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn Song, and Jacob Steinhardt. Measuring mathematical problem solving with the MATH dataset. In Thirty- fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track (Round 2), 2021. URL https://openreview.net/forum?id=7Bywt2mQsCe.  
+
+<|ref|>text<|/ref|><|det|>[[174, 237, 825, 279]]<|/det|>
+Jingcheng Hu, Yinmin Zhang, Qi Han, Daxin Jiang, Xiangyu Zhang, and Heung- Yeung Shum. Open- reasoner- zero: An open source approach to scaling up reinforcement learning on the base model. arXiv preprint arXiv:2503.24290, 2025.  
+
+<|ref|>text<|/ref|><|det|>[[174, 290, 825, 333]]<|/det|>
+Aaron Jaech, Adam Kalai, Adam Lerer, Adam Richardson, Ahmed El- Kishky, Aiden Low, Alec Helyar, Aleksander Madry, Alex Beutel, Alex Carney, et al. Openai o1 system card. arXiv preprint arXiv:2412.16720, 2024.  
+
+<|ref|>text<|/ref|><|det|>[[174, 343, 825, 412]]<|/det|>
+Mandar Joshi, Eunsol Choi, Daniel Weld, and Luke Zettlemoyer. TriviaQA: A large scale distantly supervised challenge dataset for reading comprehension. In Regina Barzilay and Min- Yen Kan (eds.), Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pp. 1601- 1611, Vancouver, Canada, July 2017. Association for Computational Linguistics. doi: 10.18653/v1/P17- 1147. URL https://aclanthology.org/P17- 1147/.  
+
+<|ref|>text<|/ref|><|det|>[[174, 422, 825, 535]]<|/det|>
+Saurav Kadavath, Tom Conerly, Amanda Askell, Tom Henighan, Dawn Drain, Ethan Perez, Nicholas Schiefer, Zac Hatfield- Dodds, Nova DasSarma, Eli Tran- Johnson, Scott Johnston, Sheer El Showk, Andy Jones, Nelson Elhage, Tristan Hume, Anna Chen, Yuntao Bai, Sam Bowman, Stanislav Fort, Deep Ganguli, Danny Hernandez, Josh Jacobson, Jackson Kernion, Shauna Kravec, Liane Lovitt, Kamal Ndousse, Catherine Olsson, Sam Ringer, Dario Amodei, Tom Brown, Jack Clark, Nicholas Joseph, Ben Mann, Sam McCandlish, Chris Olah, and Jared Kaplan. Language models (mostly) know what they know. CoRR, abs/2207.05221, 2022. URL https://doi.org/10.48550/arXiv.2207.05221.  
+
+<|ref|>text<|/ref|><|det|>[[174, 546, 825, 589]]<|/det|>
+Zhewei Kang, Xuandong Zhao, and Dawn Song. Scalable best- of- n selection for large language models via self- certainty. In 2nd AI for Math Workshop @ ICML 2025, 2025. URL https://openreview.net/forum?id=nddwJseiiy.  
+
+<|ref|>text<|/ref|><|det|>[[174, 600, 825, 643]]<|/det|>
+Polina Kirichenko, Mark Ibrahim, Kamalika Chaudhuri, and Samuel J. Bell. Abstentionbench: Reasoning LLMs fail on unanswerable questions. In ICML 2025 Workshop on Reliable and Responsible Foundation Models, 2025. URL https://openreview.net/forum?id=kYbojsAOBj.  
+
+<|ref|>text<|/ref|><|det|>[[174, 653, 825, 696]]<|/det|>
+Lorenz Kuhn, Yarin Gal, and Sebastian Farquhar. Semantic uncertainty: Linguistic invariances for uncertainty estimation in natural language generation. In The Eleventh International Conference on Learning Representations, 2023. URL https://openreview.net/forum?id=VD- AYtP0dve.  
+
+<|ref|>text<|/ref|><|det|>[[174, 707, 825, 750]]<|/det|>
+Jixuan Leng, Chengsong Huang, Banghua Zhu, and Jiaxin Huang. Taming overconfidence in LLMs: Reward calibration in RLHF. In The Thirteenth International Conference on Learning Representations, 2025. URL https://openreview.net/forum?id=10tg0jzsdL.  
+
+<|ref|>text<|/ref|><|det|>[[174, 760, 825, 802]]<|/det|>
+Stephanie Lin, Jacob Hilton, and Owain Evans. Teaching models to express their uncertainty in words. Transactions on Machine Learning Research, 2022. ISSN 2835- 8856. URL https://openreview.net/forum?id=8s8K2UZGTZ.  
+
+<|ref|>text<|/ref|><|det|>[[174, 813, 825, 855]]<|/det|>
+Zhiting Mei, Christina Zhang, Tenny Yin, Justin Lidard, Ola Shorimwa, and Anirudha Majumdar. Reasoning about uncertainty: Do reasoning models know when they don't know? arXiv preprint arXiv:2506.18183, 2025.  
+
+<|ref|>text<|/ref|><|det|>[[174, 866, 825, 922]]<|/det|>
+Sabrina J. Mielke, Arthur Szlam, Emily Dinan, and Y- Lan Boureau. Reducing conversational agents' overconfidence through linguistic calibration. Transactions of the Association for Computational Linguistics, 10:857- 872, 2022. doi: 10.1162/tacl.a.00494. URL https://aclanthology.org/2022. tacl- 1.50/.
+
+<--- Page Split --->
+<|ref|>text<|/ref|><|det|>[[172, 103, 825, 133]]<|/det|>
+M Omar, BS Glicksberg, GN Nadkarni, and E Klang. Overconfident ai? benchmarking llm self- assessment in clinical scenarios. medRxiv, 2024.  
+
+<|ref|>text<|/ref|><|det|>[[173, 140, 515, 155]]<|/det|>
+OpenAI. Openai o3 and o4- mini system card. 2025.  
+
+<|ref|>text<|/ref|><|det|>[[173, 163, 825, 220]]<|/det|>
+Hadas Orgad, Michael Toker, Zorik Gekhman, Roi Reichart, Idan Szpektor, Hadas Kotek, and Yonatan Belinkov. LLMs know more than they show: On the intrinsic representation of LLM hallucinations. In The Thirteenth International Conference on Learning Representations, 2025. URL https://openreview.net/forum?id=KrnxX5Em3W.  
+
+<|ref|>text<|/ref|><|det|>[[173, 228, 825, 270]]<|/det|>
+David Rein, Betty Li Hou, Asa Cooper Stickland, Jackson Petty, Richard Yuanzhe Pang, Julien Dirani, Julian Michael, and Samuel R Bowman. Gpqa: A graduate- level google- proof q&a benchmark. In First Conference on Language Modeling, 2024.  
+
+<|ref|>text<|/ref|><|det|>[[173, 278, 825, 335]]<|/det|>
+Paul Stangel, David Bani- Harouni, Chantal Pellegrini, Ege Ozsoy, Kamilia Zaripova, Matthias Keicher, and Nassir Navab. Rewarding doubt: A reinforcement learning approach to confidence calibration of large language models. CoRR, abs/2503.02623, March 2025. URL https://doi.org/10.48550/arXiv.2503.02623.  
+
+<|ref|>text<|/ref|><|det|>[[173, 343, 825, 385]]<|/det|>
+Elias Stengel- Eskin, Peter Hase, and Mohit Bansal. LACIE: Listener- aware finetuning for calibration in large language models. In The Thirty- eighth Annual Conference on Neural Information Processing Systems, 2024. URL https://openreview.net/forum?id=RnvgYd9RAh.  
+
+<|ref|>text<|/ref|><|det|>[[173, 393, 825, 477]]<|/det|>
+Alon Talmor, Jonathan Herzig, Nicholas Lourie, and Jonathan Berant. CommonsenseQA: A question answering challenge targeting commonsense knowledge. In Jill Burstein, Christy Doran, and Thamar Solorio (eds.), Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers), pp. 4149- 4158, Minneapolis, Minnesota, June 2019. Association for Computational Linguistics. doi: 10.18653/v1/N19- 1421. URL https://aclanthology.org/N19- 1421/.  
+
+<|ref|>text<|/ref|><|det|>[[173, 486, 825, 528]]<|/det|>
+Sree Harsha Tanneru, Chirag Agarwal, and Himabindu Lakkaraju. Quantifying uncertainty in natural language explanations of large language models. In International Conference on Artificial Intelligence and Statistics, pp. 1072- 1080. PMLR, 2024.  
+
+<|ref|>text<|/ref|><|det|>[[173, 536, 825, 606]]<|/det|>
+Katherine Tian, Eric Mitchell, Allan Zhou, Archit Sharma, Rafael Rafailov, Huaxiu Yao, Chelsea Finn, and Christopher D Manning. Just ask for calibration: Strategies for eliciting calibrated confidence scores from language models fine- tuned with human feedback. In The 2023 Conference on Empirical Methods in Natural Language Processing, 2023. URL https://openreview.net/forum?id=g3faCfrwm7.  
+
+<|ref|>text<|/ref|><|det|>[[172, 615, 825, 644]]<|/det|>
+Benjamin Turtel, Danny Franklin, Kris Skotheim, Luke Hewitt, and Philipp Schoenegger. Outcome- based reinforcement learning to predict the future. arXiv preprint arXiv:2505.17989, 2025.  
+
+<|ref|>text<|/ref|><|det|>[[172, 652, 825, 681]]<|/det|>
+Kartik Waghmare and Johanna Ziegel. Proper scoring rules for estimation and forecast evaluation. arXiv preprint arXiv:2504.01781, 2025.  
+
+<|ref|>text<|/ref|><|det|>[[173, 689, 825, 731]]<|/det|>
+Jason Wei, Nguyen Karina, Hyung Won Chung, Yunxin Joy Jiao, Spencer Papay, Amelia Glaese, John Schulman, and William Fedus. Measuring short- form factuality in large language models. arXiv preprint arXiv:2411.04368, 2024.  
+
+<|ref|>text<|/ref|><|det|>[[172, 740, 825, 769]]<|/det|>
+Changyi Xiao, Mengdi Zhang, and Yixin Cao. Bnpo: Beta normalization policy optimization. arXiv preprint arXiv:2506.02864, 2025.  
+
+<|ref|>text<|/ref|><|det|>[[173, 778, 825, 833]]<|/det|>
+Miao Xiong, Zhiyuan Hu, Xinyang Lu, YIFEI LI, Jie Fu, Junxian He, and Bryan Hooi. Can LLMs express their uncertainty? an empirical evaluation of confidence elicitation in LLMs. In The Twelfth International Conference on Learning Representations, 2024. URL https://openreview.net/forum?id=gjeQKfxFpZ.  
+
+<|ref|>text<|/ref|><|det|>[[173, 842, 825, 884]]<|/det|>
+Tianyang Xu, Shujin Wu, Shizhe Diao, Xiaoze Liu, Xingyao Wang, Yangyi Chen, and Jing Gao. Sayself: Teaching llms to express confidence with self- reflective rationales. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing, pp. 5985- 5998, 2024.  
+
+<|ref|>text<|/ref|><|det|>[[172, 893, 825, 921]]<|/det|>
+Daniel Yang, Yao- Hung Hubert Tsai, and Makoto Yamada. On verbalized confidence scores for llms, 2024. URL https://arxiv.org/abs/2412.14737.
+
+<--- Page Split --->
+<|ref|>text<|/ref|><|det|>[[173, 102, 825, 188]]<|/det|>
+Zhilin Yang, Peng Qi, Saizheng Zhang, Yoshua Bengio, William Cohen, Ruslan Salakhutdinov, and Christopher D. Manning. HotpotQA: A dataset for diverse, explainable multi- hop question answering. In Ellen Riloff, David Chiang, Julia Hockenmaier, and Jun'ichi Tsujii (eds.), Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing, pp. 2369–2380, Brussels, Belgium, October- November 2018. Association for Computational Linguistics. doi: 10.18653/v1/D18-1259. URL https://aclanthology.org/D18-1259/.  
+
+<|ref|>text<|/ref|><|det|>[[173, 196, 825, 226]]<|/det|>
+Zijun Yao, Yantao Liu, Yanxu Chen, Jianhui Chen, Junfeng Fang, Lei Hou, Juanzi Li, and Tat- Seng Chua. Are reasoning models more prone to hallucination? arXiv preprint arXiv:2505.23646, 2025.  
+
+<|ref|>text<|/ref|><|det|>[[173, 234, 824, 278]]<|/det|>
+Dongkeun Yoon, Seungone Kim, Sohee Yang, Sunkyoung Kim, Soyeon Kim, Yongil Kim, Eunbi Choi, Yireun Kim, and Minjoon Seo. Reasoning models better express their confidence. arXiv preprint arXiv:2505.14489, 2025.
+
+<--- Page Split --->
+<|ref|>sub_title<|/ref|><|det|>[[175, 101, 397, 118]]<|/det|>
+## A PROOF OF THEOREM 1  
+
+<|ref|>text<|/ref|><|det|>[[173, 131, 824, 192]]<|/det|>
+We consider a slightly more general family of reward functions than in the main paper body. As above, we assume that predictors produce a response \(y\) , a confidence \(q\in [0,1]\) ; we now assume that scores depend additionally on an arbitrary binary correctness signal \(c\) , distributed according to some \(p_{y}\coloneqq p(c = 1\mid y)\) .  
+
+<|ref|>text<|/ref|><|det|>[[173, 195, 472, 210]]<|/det|>
+We consider all reward functions of the form:  
+
+<|ref|>equation<|/ref|><|det|>[[422, 218, 575, 233]]<|/det|>
+\[R(c,q) = \lambda c - S(q,c)\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 238, 780, 255]]<|/det|>
+where \(S(q,c)\) is a scoring rule and \(\lambda >0\) is a scalar reward for producing the correct answer.  
+
+<|ref|>text<|/ref|><|det|>[[173, 260, 723, 276]]<|/det|>
+We define the expected reward of choosing a confidence \(q\) for a given response \(y\) as:  
+
+<|ref|>equation<|/ref|><|det|>[[290, 281, 705, 299]]<|/det|>
+\[V(y,q) = \mathbb{E}_{c}R(c,q) = \lambda p_{y} - [p_{y}S(q,1) + (1 - p_{y})S(q,0)]~.\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 303, 824, 335]]<|/det|>
+Lemma 1 (Calibration incentive). For any response \(y\) , the expected reward \(V(y,q)\) is maximized at \(q = p_{y}\) if and only if \(S(q,c)\) is a proper scoring rule.  
+
+<|ref|>text<|/ref|><|det|>[[173, 348, 704, 364]]<|/det|>
+Proof. The correctness term \(\lambda p_{y}\) in the reward function does not depend on \(q\) , so  
+
+<|ref|>equation<|/ref|><|det|>[[217, 370, 778, 395]]<|/det|>
+\[\arg \max_{q}V(y,q) = \arg \max_{q} - p_{y}S(q,1) + (1 - p_{y})S(q,0) = \arg \min_{q}\mathbb{E}_{c}S(q,c).\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 400, 824, 431]]<|/det|>
+But by a scoring rule is proper by definition if \(\mathbb{E}_{c\sim \mathrm{Bernoulli}(p_{y})}S(q,c)\) is minimized by \(q = p_{y}\) , so the statement of the lemma follows immediately. \(\square\)  
+
+<|ref|>text<|/ref|><|det|>[[173, 437, 824, 468]]<|/det|>
+Lemma 2 (Correctness incentive). Consider \(y\) , \(y'\) with associated success probabilities \(p_{y}\geq p_{y'}\) . Then \(V(y,p_{y})\geq V(y',p_{y'})\) if and only if  
+
+<|ref|>equation<|/ref|><|det|>[[359, 475, 636, 491]]<|/det|>
+\[S(p,1) - S(p,0)\leq \lambda \quad \text{for all} p\in [0,1].\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 504, 306, 519]]<|/det|>
+Proof. First, define:  
+
+<|ref|>equation<|/ref|><|det|>[[357, 518, 637, 535]]<|/det|>
+\[W(p) = \lambda p - pS(p,1) + (1 - p)S(p,0),\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 536, 824, 593]]<|/det|>
+Note that \(V(y,p_{y}) = W(p_{y})\) , and \(W(p)\) represents the maximum reward attainable for any \(y\) with associated success probability \(y_{p}\) . Thus, to verify the statement of the lemma, it suffices to show that \(W(p)\geq W(p')\) if and only if \(p\geq p'\) , which in turn is equivalent to showing that \(W(p)\) is nondecreasing in \(p\) .  
+
+<|ref|>text<|/ref|><|det|>[[173, 599, 422, 614]]<|/det|>
+We first compute the derivative of \(W\) :  
+
+<|ref|>equation<|/ref|><|det|>[[288, 620, 707, 638]]<|/det|>
+\[W^{\prime}(p) = \lambda -S(p,1) + S(p,0) - pS^{\prime}(p,1) - (1 - p)S^{\prime}(p,0).\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 650, 824, 680]]<|/det|>
+From the Savage- Dawid representation (Gneiting & Raftery, 2007) of proper scoring rules, there exists some non- negative weight function \(\omega (t)\geq 0\) such that:  
+
+<|ref|>equation<|/ref|><|det|>[[319, 686, 677, 703]]<|/det|>
+\[S^{\prime}(p,1) = -(1 - p)\cdot \omega (p),\qquad S^{\prime}(p,0) = p\cdot \omega (p).\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 709, 303, 723]]<|/det|>
+Substituting this in:  
+
+<|ref|>equation<|/ref|><|det|>[[260, 728, 736, 765]]<|/det|>
+\[W^{\prime}(p) = \lambda -S(p,1) + S(p,0) + p\cdot (1 - p)\cdot \omega (p) - (1 - p)\cdot p\cdot \omega (p)\] \[\qquad = S(p,1) - S(p,0).\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 769, 824, 800]]<|/det|>
+Thus the derivative of \(W\) is non- negative ( \(W\) is nondecreasing) if and only if \(S(p,1) - S(p,0)\leq \lambda\) for \(p\in [0,1]\) . \(\square\)  
+
+<|ref|>text<|/ref|><|det|>[[173, 813, 773, 829]]<|/det|>
+Then the main theorem statement in Section 3 follows immediately from these two lemmas:  
+
+<|ref|>text<|/ref|><|det|>[[173, 843, 824, 901]]<|/det|>
+Proof of Theorem 1. First observe that \(R_{\mathrm{RLCR}}\) satisfies the conditions of Lemma 2 with \(\lambda = 1\) and \(S(q,\mathbb{1}_{y\equiv y^{*}}) = (q - \mathbb{1}_{y\equiv y^{*}})^{2}\) , we have \(\max_{p}S(p,1) - S(p,0) = 1\) . Then condition 1 (calibration) follows from Lemma 1 and the fact that the Brier score is a proper scoring rule, and condition 2 (correctness) follows from Lemma 2 and the boundedness of \(S(p,1) - S(p,0)\) . \(\square\)  
+
+<|ref|>text<|/ref|><|det|>[[173, 908, 553, 923]]<|/det|>
+Corollary 1. Let \(S(q,c)\) be a strictly proper scoring rule.
+
+<--- Page Split --->
+<|ref|>text<|/ref|><|det|>[[212, 102, 823, 133]]<|/det|>
+1. If \(S(p,1) - S(p,0)\) is bounded, then there exists a finite \(\lambda >0\) such that the reward function \(R(c,q) = \lambda c - S(q,c)\) satisfies the correctness condition:  
+
+<|ref|>equation<|/ref|><|det|>[[393, 139, 662, 155]]<|/det|>
+\[S(p,1) - S(p,0)\leq \lambda \quad \text{for all} p\in [0,1]\]  
+
+<|ref|>text<|/ref|><|det|>[[230, 161, 603, 177]]<|/det|>
+and thus jointly incentivizes calibration and correctness.  
+
+<|ref|>text<|/ref|><|det|>[[210, 184, 823, 216]]<|/det|>
+2. If \(S(p,1) - S(p,0)\) is unbounded, then for any finite \(\lambda >0\) , there may exist some \(y\geq y^{\prime}\) such that \(W(p_{y})< W(p_{y^{\prime}})\) , and \(R_{R L C R}\) prefers \((y^{\prime},p_{y^{\prime}})\) to \((y,p_{y})\) .  
+
+<|ref|>text<|/ref|><|det|>[[173, 234, 685, 252]]<|/det|>
+Examples. The Brier score is bounded: \(S(p,1) = (1 - p)^{2}\) , \(S(p,0) = p^{2}\) , so:  
+
+<|ref|>equation<|/ref|><|det|>[[332, 258, 664, 275]]<|/det|>
+\[S(p,1) - S(p,0) = 1 - 2p\leq 1\quad \mathrm{for~all~}p\in [0,1]\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 281, 411, 296]]<|/det|>
+Thus, the condition holds for \(\lambda = 1\) .  
+
+<|ref|>text<|/ref|><|det|>[[173, 302, 486, 317]]<|/det|>
+In contrast, the logarithmic score is unbounded:  
+
+<|ref|>equation<|/ref|><|det|>[[173, 325, 825, 359]]<|/det|>
+\[S(p,1) = -\log p,\quad S(p,0) = -\log (1 - p),\quad S(p,1) - S(p,0) = \log \left(\frac{1 - p}{p}\right)\to \infty \quad \mathrm{as} p\to 0\]  
+
+<|ref|>text<|/ref|><|det|>[[173, 365, 432, 380]]<|/det|>
+So no finite \(\lambda\) can satisfy the condition.
+
+<--- Page Split --->
+<|ref|>sub_title<|/ref|><|det|>[[175, 101, 401, 118]]<|/det|>
+## B EXPERIMENTAL SETUP  
+
+<|ref|>sub_title<|/ref|><|det|>[[175, 136, 365, 151]]<|/det|>
+## B.1 TRAINING DATASETS  
+
+<|ref|>text<|/ref|><|det|>[[174, 163, 825, 333]]<|/det|>
+HotpotQA- Modified: We use a modified version of the HotPotQA distractor dataset, which contains factual questions requiring multi- hop reasoning. (Yang et al., 2018). Each example in this setting presents ten paragraphs, only two of which contain the information necessary to answer the question; the remaining eight paragraphs include closely related but irrelevant details. Consequently, solving this task requires the model to identify and reason over the pertinent passages. To more strongly develop uncertainty reasoning capability, we construct a new dataset, HotPotQA- Modified, in which we systematically remove either 0, 1, or both of the key paragraphs required to answer each question. This modification introduces varying levels of informational completeness that the model must reason over. We distribute questions across three equal groups: one- third have no relevant paragraphs (0/8), one- third have 1 relevant paragraph (1/7), and one- third have both relevant paragraphs (2/6). Each question consistently contains 8 total paragraphs. Our training dataset consists of 20,000 examples. We measure correctness using exact string match.  
+
+<|ref|>text<|/ref|><|det|>[[174, 337, 825, 436]]<|/det|>
+Big- Math Digits: We use Big- Math (Albalak et al., 2025), a large, curated training dataset for RL containing over 250,000 math problems, including questions from benchmarks such as Math and GSM8K. To ensure an appropriate range of difficulty, we retain problems for which the LLaMA- 8B solve rate (provided in the dataset) is between 0- 70%. We also found that verifier noise can be significant in Math datasets and can cause training instability. To reduce verifier noise, we further restrict the dataset to problems with numerical answers, enabling near- perfect automatic verification. Our final training set consists of 15,000 problems. We compute correctness using math- verify.  
+
+<|ref|>sub_title<|/ref|><|det|>[[175, 457, 448, 472]]<|/det|>
+## B.2 ADDITIONAL TRAINING DETAILS  
+
+<|ref|>text<|/ref|><|det|>[[174, 485, 824, 584]]<|/det|>
+Following Turtel et al. (2025), we remove the standard deviation division in the advantage, which might help with learning on examples where there are extreme miscalibrations. We use the BNPO loss function, which aggregates token level losses using the number of active tokens in the local training batch (Xiao et al., 2025). We generate 32 responses per prompt with a temperature of 0.7, and use an effective batch size of 2048. For training RLCR, we use the Long RLCR system prompt for Hotpot and the Simple RLCR prompt for Math (the long version did not provide additional benefit on Math). We use the Simple Generation prompt for RLVR. All prompts in Appendix C.  
+
+<|ref|>text<|/ref|><|det|>[[174, 589, 824, 661]]<|/det|>
+Format Reward: We use a format reward to encourage adherence to the structured format shown in Fig. 1. In RLVR, models must format their output in <think> and <answer> tags. In RLCR, in addition to <think> and <answer> tags, we require an <analysis> tag to enclose uncertainty reasoning and a <confidence> tag for verbalized confidence. A valid response must contain all these tags in the correct order. Both format and calibration rewards are weighted equally.  
+
+<|ref|>text<|/ref|><|det|>[[174, 666, 824, 750]]<|/det|>
+SFT Warmup: In Math, we train a variant with a lightweight SFT warmup phase before RL to obtain higher quality uncertainty analyses. We generate solutions from the base model on 500 examples and prompt Deepseek- R1 with the Expert SFT Prompt to produce uncertainty analyses for them. We then perform SFT with the <think> and <answer> obtained from the base model, appended with the <analysis> obtained from Deepseek- R1. Note that we do not ask Deepseek- R1 to output confidence scores.  
+
+<|ref|>sub_title<|/ref|><|det|>[[175, 772, 384, 787]]<|/det|>
+## B.3 EVALUATION DATASETS  
+
+<|ref|>text<|/ref|><|det|>[[174, 800, 491, 815]]<|/det|>
+We run evaluation on a large number of datasets:  
+
+<|ref|>text<|/ref|><|det|>[[211, 828, 824, 884]]<|/det|>
+1. HotPotQA (Distractor): We use 1000 validation examples from the original HotpotQA distractor dataset. We slightly modify the dataset and remove 2 non-relevant paragraphs from each question. Thus, each question has 8 paragraphs with both supporting paragraphs present. We measure correctness using exact-match (Yang et al., 2018).  
+
+<|ref|>text<|/ref|><|det|>[[210, 893, 822, 922]]<|/det|>
+2. HotPotQA-Modified: We evaluate on 500 held-out validation examples. We measure correctness using exact-match.
+
+<--- Page Split --->
+<|ref|>text<|/ref|><|det|>[[210, 102, 823, 145]]<|/det|>
+3. TriviaQA: We use 2000 examples from the validation set of the TriviaQA dataset (Joshi et al., 2017). We use the no-context split to purely test factual accuracy. We evaluate using LLM-as-a-judge.  
+
+<|ref|>text<|/ref|><|det|>[[210, 150, 822, 179]]<|/det|>
+4. SimpleQA: We use the full SimpleQA dataset consisting of 4326 factual questions (Wei et al., 2024). We evaluate using LLM-as-a-judge.  
+
+<|ref|>text<|/ref|><|det|>[[210, 184, 822, 227]]<|/det|>
+5. Math-500 We use the popular MATH-500 dataset, which contains a subset of problems from the original MATH dataset (Hendrycks et al., 2021). We evaluate using math-verify, a mathematical expression evaluation system released by huggingface.  
+
+<|ref|>text<|/ref|><|det|>[[210, 231, 822, 260]]<|/det|>
+6. GSM8K: We use the test set (1319 problems) of the popular Grade School Math 8K dataset (Cobbe et al., 2021). We evaluate using math-verify.  
+
+<|ref|>text<|/ref|><|det|>[[210, 264, 822, 293]]<|/det|>
+7. Big-Math-Digits: We evaluate on 1000 held-out validation examples. We evaluate using math-verify.  
+
+<|ref|>text<|/ref|><|det|>[[210, 297, 822, 353]]<|/det|>
+8. CommonSenseQA: We use the validation set (1220 problems) of the CommonsenseQA dataset (Talmor et al., 2019), a multiple-choice question answering dataset that requires different types of commonsense knowledge to predict the correct answers. We evaluate using LLM-as-a-judge.  
+
+<|ref|>text<|/ref|><|det|>[[210, 357, 822, 400]]<|/det|>
+9. GPQA: We use the GPQA main dataset containing 448 multiple-choice questions written by experts in biology, physics, and chemistry (Rein et al., 2024). We evaluate using LLM-as-a-judge.  
+
+<|ref|>sub_title<|/ref|><|det|>[[174, 417, 373, 431]]<|/det|>
+## B.4 EVALUATION DETAILS  
+
+<|ref|>text<|/ref|><|det|>[[174, 443, 822, 485]]<|/det|>
+All models are evaluated with temperature 0. For all datasets except Math and GSM8K, we use a maximum token budget of 4096. The system prompt for evaluation and the pipeline to extract answer and confidence scores varies slightly based on the method we are evaluating:  
+
+<|ref|>text<|/ref|><|det|>[[210, 497, 822, 540]]<|/det|>
+1. RLCR (ours): RLCR models use <think>, <answer>, <analysis> and <confidence> tags. They are evaluated with the same system prompts they are trained on. We extract their answer from <answer> tag and their confidence from <confidence> tag.  
+
+<|ref|>text<|/ref|><|det|>[[210, 545, 822, 601]]<|/det|>
+2. RLVR: RLVR models use the <think> and <answer>. It is evaluated with the same system prompt and we extract their answer from the <answer> tag. To obtain their verbalized confidence, we append "Thinking time ended. My verbalized confidence in my answer as a number between 0 and 100 is equal to" to their generated output.  
+
+<|ref|>text<|/ref|><|det|>[[210, 605, 822, 648]]<|/det|>
+3. Classifier/Probe: Both methods are conditioned on the question and the RLVR model's generation (solution and answer). These methods thus use RLVR model as a generator and their reported accuracies in the result tables are equal.  
+
+<|ref|>text<|/ref|><|det|>[[210, 652, 822, 724]]<|/det|>
+4. Base: The base model is not good at instruction following and is prompted with a simpler system prompt (Simple Confidence Prompt) that guides it to use <think>, <answer> and <confidence> tags. In case no valid confidence can be extracted, we append "Thinking time ended. My verbalized confidence in my answer as a number between 0 and 100 is equal to" to their output and call them again to extract confidence.  
+
+<|ref|>text<|/ref|><|det|>[[173, 735, 822, 847]]<|/det|>
+For all methods, if we are unable to extract a valid answer from the <answer> tags, we append "Thinking time ended. My final answer is" to their output and call them again. The main goal of these custom pipelines is to be able to fairly extract an answer and a confidence level and minimize cases where incorrect formatting adversely affects performance. Note that because they are trained with format rewards, both the RL-trained models are nearly perfect in adhering to the desired format and require minimal interventions. However, the base model benefits from this full extraction pipeline. Importantly, once answers and confidences are extracted, all methods are evaluated identically and based on the dataset, exact-match, LLM-as-a-judge or math-verify is used.  
+
+<|ref|>text<|/ref|><|det|>[[174, 853, 823, 923]]<|/det|>
+LLM-as-a-judge: We use Llama- 3.1- 8B- Instruct with temperature set to 0 as our judge. The judge is provided with the question, the ground truth answer and the answer extracted from the evaluation pipeline. It is prompted to respond with "YES" or "NO" based on the correctness of the answer. As the datasets we evaluate have short and objective answers, we do not condition the judge on the thinking traces which can add biases.
+
+<--- Page Split --->
+<|ref|>sub_title<|/ref|><|det|>[[175, 180, 333, 195]]<|/det|>
+## Long RLCR Prompt  
+
+<|ref|>text<|/ref|><|det|>[[197, 206, 800, 360]]<|/det|>
+"A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind, provides the user with the final answer, then analyzes its confidence about the solution and then provides the user with its confidence level. The confidence level is a number between 0 and 1 (inclusive) enclosed within <confidence> </confidence> tags. The final answer is enclosed between <answer> </answer> tags. The analysis about confidence and uncertainty is enclosed within <analysis> </analysis> tags. The assistant should reason about its confidence in the solution and its uncertainty in the solution within these tags. Here are some guidelines for the analysis: 1. Your task is to point out things where the model could be wrong in its thinking, or things where there might be ambiguity in the solution steps, or in the reasoning process itself.  
+
+<|ref|>text<|/ref|><|det|>[[197, 357, 798, 385]]<|/det|>
+2. You should not suggest ways of fixing the response, your job is only to reason about uncertainties.  
+
+<|ref|>text<|/ref|><|det|>[[197, 384, 798, 425]]<|/det|>
+3. For some questions, the response might be correct. In these cases, It is also okay to have only a small number of uncertainties and then explicitly say that I am unable to spot more uncertainties.  
+
+<|ref|>text<|/ref|><|det|>[[197, 424, 797, 453]]<|/det|>
+4. Uncertainties might be different from errors. For example, uncertainties may arise from ambiguities in the question, or from the application of a particular lemma/proof.  
+
+<|ref|>text<|/ref|><|det|>[[197, 452, 797, 480]]<|/det|>
+5. If there are alternate potential approaches that may lead to different answers, you should mention them.  
+
+<|ref|>text<|/ref|><|det|>[[197, 480, 797, 508]]<|/det|>
+6. List out plausible uncertainties, do not make generic statements, be as specific about uncertainties as possible.  
+
+<|ref|>text<|/ref|><|det|>[[197, 508, 694, 523]]<|/det|>
+7. Enclose this uncertainty analysis within <analysis> </analysis> tags.  
+
+<|ref|>text<|/ref|><|det|>[[197, 522, 797, 578]]<|/det|>
+The final format that must be followed is : <think> reasoning process here </think> <answer> final answer here </analysis> <analysis> analysis about confidence and uncertainty here </analysis> <confidence> confidence level here (number between 0 and 1) </confidence>)  
+
+<|ref|>sub_title<|/ref|><|det|>[[198, 671, 346, 686]]<|/det|>
+## Simple RLCR Prompt  
+
+<|ref|>text<|/ref|><|det|>[[197, 698, 800, 865]]<|/det|>
+A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The Assistant first thinks about the reasoning process in the mind, provides the user with the final answer, then analyzes its confidence about the solution and provides the user with its confidence level. The confidence level is a number between 0 and 1 (inclusive) enclosed within <confidence> </confidence> tags. The final answer is enclosed between <answer> </answer> tags. The analysis about confidence and uncertainty is enclosed within <analysis> </analysis> tags. The Assistant should reason about its confidence in the solution and its uncertainty in the solution within these tags. The final format that must be followed is: <think> reasoning process here </think> <answer> final answer here </answer> <analysis> analysis about confidence and uncertainty here </analysis> <confidence> confidence level here (number between 0 and 1) </confidence>
+
+<--- Page Split --->
+<|ref|>sub_title<|/ref|><|det|>[[198, 105, 377, 120]]<|/det|>
+## Simple Confidence Prompt  
+
+<|ref|>text<|/ref|><|det|>[[198, 131, 800, 245]]<|/det|>
+Simple Confidence PromptA conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and analyzes its confidence about the solution and then provides the user with the final answer as well as its confidence level. The confidence level is a number between 0 and 1 (inclusive) enclosed within <confidence> </confidence> tags. The final answer is enclosed between <answer> </answer> tags. The final format that must be followed is: <think> reasoning process here </think><answer> final answer here </answer> <confidence> confidence level here (number between 0 and 1) </confidence>.  
+
+<|ref|>sub_title<|/ref|><|det|>[[198, 286, 295, 301]]<|/det|>
+## RLVR Prompt  
+
+<|ref|>text<|/ref|><|det|>[[198, 312, 800, 383]]<|/det|>
+RLVR PromptA conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> reasoning process here </think><answer> answer here </answer>.  
+
+<|ref|>sub_title<|/ref|><|det|>[[198, 421, 330, 437]]<|/det|>
+## Expert SFT Prompt  
+
+<|ref|>text<|/ref|><|det|>[[198, 448, 800, 503]]<|/det|>
+You are given a question and a solution to it. You have to verify if the solution is correct and enclose your verification reasoning within <analysis> </analysis> tags. Your analysis should be a minimum of 300 characters and should sequentially go through the thinking solution step by step. Here are the guidelines for your analysis:  
+
+<|ref|>text<|/ref|><|det|>[[198, 504, 800, 533]]<|/det|>
+1. Your analysis should also be in 'I' form as if you wrote the solution and are now verifying it.  
+
+<|ref|>text<|/ref|><|det|>[[198, 533, 800, 561]]<|/det|>
+2. Your goal is not to solve the problem but instead to verify if the steps in the presented solution are correct.  
+
+<|ref|>text<|/ref|><|det|>[[198, 561, 800, 589]]<|/det|>
+3. If there are ambiguities in the solution steps or if a step introduces uncertainty, you should mention it in the analysis.  
+
+<|ref|>text<|/ref|><|det|>[[198, 589, 624, 603]]<|/det|>
+4. Go through the solution sequentially in a step-by-step manner.  
+
+<|ref|>text<|/ref|><|det|>[[198, 603, 536, 616]]<|/det|>
+5. The analysis should be 300 characters minimum.  
+
+<|ref|>text<|/ref|><|det|>[[198, 617, 694, 631]]<|/det|>
+6. Enclose this uncertainty analysis within <analysis> </analysis> tags.
+
+<--- Page Split --->
+<|ref|>sub_title<|/ref|><|det|>[[173, 101, 286, 116]]<|/det|>
+## D RESULTS  
+
+<|ref|>sub_title<|/ref|><|det|>[[173, 132, 458, 147]]<|/det|>
+### D.1 MODELS TRAINED ON HOTPOTQA  
+
+<|ref|>table<|/ref|><|det|>[[173, 163, 860, 336]]<|/det|>
+<|ref|>table_caption<|/ref|><|det|>[[247, 345, 749, 361]]<|/det|>
+Table 2: Performance on SimpleQA and Trivia datasets. Best values bolded.   
+
+<table><tr><td rowspan="2">Method</td><td colspan="4">SimpleQA</td><td colspan="4">Trivia</td></tr><tr><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td></tr><tr><td>Base</td><td>13.5%</td><td>0.502</td><td>0.773</td><td>0.809</td><td>57.8%</td><td>0.510</td><td>0.381</td><td>0.371</td></tr><tr><td>RLVR</td><td>12.4%</td><td>0.501</td><td>0.875</td><td>0.875</td><td>62.2%</td><td>0.502</td><td>0.377</td><td>0.377</td></tr><tr><td>RLVR +Classifier</td><td>12.4%</td><td>0.477</td><td>0.531</td><td>0.638</td><td>62.2%</td><td>0.567</td><td>0.256</td><td>0.151</td></tr><tr><td>RLVR +Brier-Classifier</td><td>12.4%</td><td>0.598</td><td>0.112</td><td>0.058</td><td>62.2%</td><td>0.568</td><td>0.370</td><td>0.371</td></tr><tr><td>RLVR +Probe</td><td>12.4%</td><td>0.506</td><td>0.141</td><td>0.124</td><td>62.2%</td><td>0.472</td><td>0.430</td><td>0.410</td></tr><tr><td>Answer Prob</td><td>12.4%</td><td>0.418</td><td>0.832</td><td>0.847</td><td>62.2%</td><td>0.504</td><td>0.366</td><td>0.361</td></tr><tr><td>RLCR (ours)</td><td>12.1%</td><td>0.598</td><td>0.241</td><td>0.337</td><td>60.8%</td><td>0.731</td><td>0.202</td><td>0.058</td></tr></table>  
+
+<|ref|>table<|/ref|><|det|>[[173, 382, 860, 555]]<|/det|>
+<|ref|>table_caption<|/ref|><|det|>[[247, 565, 749, 581]]<|/det|>
+Table 3: Performance on CommonsenseQA and GPQA. Best values bolded.   
+
+<table><tr><td rowspan="2">Method</td><td colspan="4">CommonsenseQA</td><td colspan="4">GPQA</td></tr><tr><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td></tr><tr><td>Base</td><td>88.9%</td><td>0.623</td><td>0.099</td><td>0.004</td><td>39.5%</td><td>0.492</td><td>0.504</td><td>0.509</td></tr><tr><td>RLVR</td><td>90.8%</td><td>0.500</td><td>0.092</td><td>0.092</td><td>39.5%</td><td>0.500</td><td>0.605</td><td>0.605</td></tr><tr><td>RLVR +Classifier</td><td>90.8%</td><td>0.635</td><td>0.119</td><td>0.183</td><td>39.5%</td><td>0.523</td><td>0.279</td><td>0.161</td></tr><tr><td>RLVR +Brier-Classifier</td><td>90.8%</td><td>0.645</td><td>0.261</td><td>0.418</td><td>39.5%</td><td>0.523</td><td>0.288</td><td>0.212</td></tr><tr><td>RLVR +Probe</td><td>90.8%</td><td>0.499</td><td>0.748</td><td>0.812</td><td>39.5%</td><td>0.503</td><td>0.329</td><td>0.292</td></tr><tr><td>Answer Prob</td><td>90.8%</td><td>0.603</td><td>0.083</td><td>0.031</td><td>39.5%</td><td>0.526</td><td>0.537</td><td>0.544</td></tr><tr><td>RLCR (ours)</td><td>91.3%</td><td>0.728</td><td>0.167</td><td>0.302</td><td>41.5%</td><td>0.550</td><td>0.267</td><td>0.155</td></tr></table>  
+
+<|ref|>table<|/ref|><|det|>[[173, 600, 860, 775]]<|/det|>
+<|ref|>table_caption<|/ref|><|det|>[[270, 784, 725, 799]]<|/det|>
+Table 4: Performance on Math-500 and GSM8K. Best values bolded.   
+
+<table><tr><td rowspan="2">Method</td><td colspan="4">MATH-500</td><td colspan="4">GSM8K</td></tr><tr><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td></tr><tr><td>Base</td><td>46.8%</td><td>0.591</td><td>0.485</td><td>0.492</td><td>73.5%</td><td>0.524</td><td>0.240</td><td>0.215</td></tr><tr><td>RLVR</td><td>38.6%</td><td>0.502</td><td>0.610</td><td>0.611</td><td>80.1%</td><td>0.504</td><td>0.198</td><td>0.198</td></tr><tr><td>RLVR +Classifier</td><td>38.6%</td><td>0.704</td><td>0.260</td><td>0.224</td><td>80.1%</td><td>0.572</td><td>0.162</td><td>0.067</td></tr><tr><td>RLVR +Brier-Classifier</td><td>38.6%</td><td>0.580</td><td>0.319</td><td>0.291</td><td>80.1%</td><td>0.659</td><td>0.548</td><td>0.629</td></tr><tr><td>RLVR +Probe</td><td>38.6%</td><td>0.671</td><td>0.241</td><td>0.152</td><td>80.1%</td><td>0.532</td><td>0.413</td><td>0.479</td></tr><tr><td>Answer Prob</td><td>38.6%</td><td>0.786</td><td>0.510</td><td>0.547</td><td>80.1%</td><td>0.775</td><td>0.163</td><td>0.169</td></tr><tr><td>RLCR (ours)</td><td>45.4%</td><td>0.716</td><td>0.251</td><td>0.188</td><td>86.3%</td><td>0.740</td><td>0.142</td><td>0.197</td></tr></table>
+
+<--- Page Split --->
+<|ref|>table<|/ref|><|det|>[[175, 100, 860, 272]]<|/det|>
+
+<table><tr><td rowspan="2">Method</td><td colspan="4">HotpotQA</td><td colspan="4">HotpotQA-Modified</td></tr><tr><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td></tr><tr><td>Base</td><td>39.7%</td><td>0.540</td><td>0.525</td><td>0.535</td><td>30.4%</td><td>0.591</td><td>0.566</td><td>0.588</td></tr><tr><td>RLVR</td><td>63.0%</td><td>0.500</td><td>0.370</td><td>0.370</td><td>46.0%</td><td>0.500</td><td>0.540</td><td>0.540</td></tr><tr><td>RLVR +Classifier</td><td>63.0%</td><td>0.664</td><td>0.217</td><td>0.070</td><td>46.0%</td><td>0.772</td><td>0.209</td><td>0.126</td></tr><tr><td>RLVR +Brier-Classifier</td><td>63.0%</td><td>0.653</td><td>0.223</td><td>0.091</td><td>46.0%</td><td>0.791</td><td>0.201</td><td>0.117</td></tr><tr><td>RLVR +Probe</td><td>63.0%</td><td>0.553</td><td>0.243</td><td>0.096</td><td>46.0%</td><td>0.571</td><td>0.263</td><td>0.122</td></tr><tr><td>Answer Prob</td><td>63.0%</td><td>0.715</td><td>0.357</td><td>0.360</td><td>46.0%</td><td>0.609</td><td>0.525</td><td>0.529</td></tr><tr><td>RLCR (ours)</td><td>62.1%</td><td>0.687</td><td>0.210</td><td>0.030</td><td>44.4%</td><td>0.798</td><td>0.188</td><td>0.078</td></tr></table>
+
+<|ref|>table_caption<|/ref|><|det|>[[228, 284, 767, 296]]<|/det|>
+Table 5: Performance on HotpotQA and HotpotQA-Modified. Best values bolded.
+
+<|ref|>title<|/ref|><|det|>[[173, 352, 420, 363]]<|/det|>
+# D.2 MODELS TRAINED ON MATH
+
+<|ref|>table<|/ref|><|det|>[[175, 419, 859, 604]]<|/det|>
+
+<table><tr><td rowspan="2">Method</td><td colspan="4">SimpleQA</td><td colspan="4">Trivia</td></tr><tr><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td></tr><tr><td>Base</td><td>13.5%</td><td>0.502</td><td>0.773</td><td>0.809</td><td>57.8%</td><td>0.510</td><td>0.381</td><td>0.371</td></tr><tr><td>RLVR</td><td>15.2%</td><td>0.528</td><td>0.828</td><td>0.840</td><td>58.3%</td><td>0.503</td><td>0.430</td><td>0.427</td></tr><tr><td>RLVR +Classifier</td><td>15.2%</td><td>0.446</td><td>0.567</td><td>0.641</td><td>58.3%</td><td>0.574</td><td>0.291</td><td>0.223</td></tr><tr><td>RLVR +Brier-Classifier</td><td>15.2%</td><td>0.494</td><td>0.154</td><td>0.108</td><td>58.3%</td><td>0.608</td><td>0.301</td><td>0.253</td></tr><tr><td>RLVR +Probe</td><td>15.2%</td><td>0.440</td><td>0.582</td><td>0.657</td><td>58.3%</td><td>0.560</td><td>0.296</td><td>0.229</td></tr><tr><td>Answer Prob</td><td>15.2%</td><td>0.450</td><td>0.799</td><td>0.810</td><td>58.3%</td><td>0.480</td><td>0.398</td><td>0.384</td></tr><tr><td>RLCR (ours)</td><td>12.1%</td><td>0.518</td><td>0.426</td><td>0.536</td><td>61.0%</td><td>0.673</td><td>0.218</td><td>0.098</td></tr><tr><td>SFT+RLCR (ours)</td><td>11.4%</td><td>0.595</td><td>0.290</td><td>0.397</td><td>55.5%</td><td>0.719</td><td>0.212</td><td>0.058</td></tr></table>
+
+<|ref|>table_caption<|/ref|><|det|>[[249, 618, 748, 630]]<|/det|>
+Table 6: Performance on SimpleQA and Trivia datasets. Best values bolded.
+
+<|ref|>table<|/ref|><|det|>[[175, 707, 859, 892]]<|/det|>
+
+<table><tr><td rowspan="2">Method</td><td colspan="4">CommonsenseQA</td><td colspan="4">GPQA</td></tr><tr><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td></tr><tr><td>Base</td><td>88.6%</td><td>0.620</td><td>0.099</td><td>0.004</td><td>39.5%</td><td>0.492</td><td>0.504</td><td>0.509</td></tr><tr><td>RLVR</td><td>89.3%</td><td>0.547</td><td>0.131</td><td>0.126</td><td>50.0%</td><td>0.496</td><td>0.531</td><td>0.531</td></tr><tr><td>RLVR +Classifier</td><td>89.3%</td><td>0.614</td><td>0.226</td><td>0.343</td><td>50.0%</td><td>0.514</td><td>0.327</td><td>0.268</td></tr><tr><td>RLVR +Brier-Classifier</td><td>89.3%</td><td>0.599</td><td>0.302</td><td>0.447</td><td>50.0%</td><td>0.533</td><td>0.334</td><td>0.279</td></tr><tr><td>RLVR +Probe</td><td>89.3%</td><td>0.571</td><td>0.187</td><td>0.280</td><td>50.0%</td><td>0.496</td><td>0.302</td><td>0.192</td></tr><tr><td>Answer Prob</td><td>89.3%</td><td>0.556</td><td>0.104</td><td>0.094</td><td>50.0%</td><td>0.532</td><td>0.441</td><td>0.398</td></tr><tr><td>RLCR (ours)</td><td>90.1%</td><td>0.619</td><td>0.213</td><td>0.340</td><td>43.3%</td><td>0.568</td><td>0.260</td><td>0.102</td></tr><tr><td>SFT+RLCR (ours)</td><td>77.6%</td><td>0.726</td><td>0.217</td><td>0.251</td><td>32.6%</td><td>0.602</td><td>0.226</td><td>0.080</td></tr></table>
+
+<|ref|>table_caption<|/ref|><|det|>[[220, 905, 775, 917]]<|/det|>
+Table 7: Performance on CommonsenseQA and GPQA datasets. Best values bolded.
+
+<--- Page Split --->
+<|ref|>table<|/ref|><|det|>[[175, 100, 860, 289]]<|/det|>
+
+<table><tr><td rowspan="2">Method</td><td colspan="4">MATH-500</td><td colspan="4">GSM8K</td></tr><tr><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td></tr><tr><td>Base</td><td>46.8%</td><td>0.591</td><td>0.485</td><td>0.492</td><td>73.5%</td><td>0.524</td><td>0.240</td><td>0.215</td></tr><tr><td>RLVR</td><td>59.2%</td><td>0.451</td><td>0.438</td><td>0.427</td><td>90.6%</td><td>0.465</td><td>0.094</td><td>0.048</td></tr><tr><td>RLVR +Classifier</td><td>59.2%</td><td>0.771</td><td>0.220</td><td>0.177</td><td>90.6%</td><td>0.768</td><td>0.077</td><td>0.057</td></tr><tr><td>RLVR +Brier-Classifier</td><td>59.2%</td><td>0.788</td><td>0.215</td><td>0.184</td><td>90.6%</td><td>0.757</td><td>0.076</td><td>0.052</td></tr><tr><td>RLVR +Probe</td><td>59.2%</td><td>0.670</td><td>0.259</td><td>0.198</td><td>90.6%</td><td>0.560</td><td>0.109</td><td>0.135</td></tr><tr><td>Answer Prob</td><td>59.2%</td><td>0.544</td><td>0.392</td><td>0.395</td><td>90.6%</td><td>0.479</td><td>0.091</td><td>0.088</td></tr><tr><td>RLCR (ours)</td><td>59.8%</td><td>0.665</td><td>0.227</td><td>0.120</td><td>89.6%</td><td>0.632</td><td>0.100</td><td>0.119</td></tr><tr><td>SFT+RLCR (ours)</td><td>55.8%</td><td>0.806</td><td>0.194</td><td>0.156</td><td>90.4%</td><td>0.731</td><td>0.076</td><td>0.058</td></tr></table>
+
+<|ref|>table_caption<|/ref|><|det|>[[271, 300, 725, 312]]<|/det|>
+Table 8: Performance on Math-500 and GSM8K. Best values bolded.
+
+<|ref|>table<|/ref|><|det|>[[175, 344, 858, 530]]<|/det|>
+
+<table><tr><td rowspan="2">Method</td><td colspan="4">Big-Math Digits</td><td colspan="4">HotpotQA</td></tr><tr><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td><td>Acc.</td><td>AUROC</td><td>Brier</td><td>ECE</td></tr><tr><td>Base</td><td>48.1%</td><td>0.560</td><td>0.466</td><td>0.469</td><td>39.7%</td><td>0.540</td><td>0.525</td><td>0.535</td></tr><tr><td>RLVR</td><td>68.8%</td><td>0.502</td><td>0.319</td><td>0.300</td><td>49.7%</td><td>0.505</td><td>0.547</td><td>0.547</td></tr><tr><td>RLVR +Classifier</td><td>68.8%</td><td>0.810</td><td>0.164</td><td>0.052</td><td>49.7%</td><td>0.584</td><td>0.283</td><td>0.196</td></tr><tr><td>RLVR +Brier-Classifier</td><td>68.8%</td><td>0.794</td><td>0.167</td><td>0.053</td><td>49.7%</td><td>0.597</td><td>0.302</td><td>0.243</td></tr><tr><td>RLVR +Probe</td><td>68.8%</td><td>0.722</td><td>0.191</td><td>0.066</td><td>49.7%</td><td>0.580</td><td>0.276</td><td>0.164</td></tr><tr><td>Answer Prob</td><td>68.8%</td><td>0.533</td><td>0.297</td><td>0.298</td><td>49.7%</td><td>0.599</td><td>0.469</td><td>0.475</td></tr><tr><td>RLCR (ours)</td><td>68.7%</td><td>0.726</td><td>0.181</td><td>0.050</td><td>48.3%</td><td>0.615</td><td>0.272</td><td>0.177</td></tr><tr><td>SFT+RLCR (ours)</td><td>70.5%</td><td>0.792</td><td>0.154</td><td>0.029</td><td>41.6%</td><td>0.650</td><td>0.241</td><td>0.093</td></tr></table>
+
+<|ref|>table_caption<|/ref|><|det|>[[243, 542, 754, 555]]<|/det|>
+Table 9: Performance on Big-Math Digits and HotpotQA. Best values bolded.
+
+<--- Page Split --->
+<|ref|>sub_title<|/ref|><|det|>[[175, 100, 357, 117]]<|/det|>
+## SIMPLEQA EXAMPLE  
+
+<|ref|>sub_title<|/ref|><|det|>[[198, 137, 264, 152]]<|/det|>
+## Question  
+
+<|ref|>text<|/ref|><|det|>[[198, 164, 800, 194]]<|/det|>
+Who was awarded the Oceanography Society's Jerlov Award in 2018? (Ground Truth Answer: Annick Bricaud)  
+
+<|ref|>sub_title<|/ref|><|det|>[[198, 220, 293, 234]]<|/det|>
+## RLCR (ours)  
+
+<|ref|>text<|/ref|><|det|>[[198, 245, 800, 308]]<|/det|>
+<think> The question asks who was awarded the Oceanography Society's Jerlov Award in 2018. The Jerlov Award is given by the Oceanography Society, and it is named after the late Professor Gunnar Jerlov, a pioneer in the field of ocean optics. To find the winner of the 2018 award, I would need to look up the most recent information on the Oceanography Society's website or other reliable sources. </think>  
+
+<|ref|>text<|/ref|><|det|>[[199, 314, 468, 327]]<|/det|>
+<answer> Dr. David W. Schiedek </answer>  
+
+<|ref|>text<|/ref|><|det|>[[198, 332, 800, 397]]<|/det|>
+<analysis> The Oceanography Society's website or other reliable sources do not provide information on the winner of the 2018 Jerlov Award. It is possible that the information is not readily available or that the award was not given in 2018. Additionally, the name "Dr. David W. Schiedek" is not a well- known figure in the field of oceanography, which raises uncertainty about the accuracy of this answer. </analysis>  
+
+<|ref|>text<|/ref|><|det|>[[199, 403, 417, 416]]<|/det|>
+<confidence> 0.25 </confidence>  
+
+<|ref|>sub_title<|/ref|><|det|>[[198, 435, 246, 449]]<|/det|>
+## RLVR  
+
+<|ref|>text<|/ref|><|det|>[[198, 460, 800, 500]]<|/det|>
+<think> The question asks for the person who was awarded the Oceanography Society's Jerlov Award in 2018. The Jerlov Award is given by the Oceanography Society to recognize outstanding contributions to the field of oceanography. The recipient for 2018 was Dr. Laurence C. Smith. </think>  
+
+<|ref|>text<|/ref|><|det|>[[199, 504, 444, 517]]<|/det|>
+<answer> Laurence C. Smith </answer>  
+
+<|ref|>text<|/ref|><|det|>[[199, 523, 417, 536]]<|/det|>
+<confidence> 100. </confidence>  
+
+<|ref|>sub_title<|/ref|><|det|>[[198, 555, 304, 570]]<|/det|>
+## Qwen-7B-Base  
+
+<|ref|>text<|/ref|><|det|>[[198, 582, 800, 622]]<|/det|>
+<think> To find out who was awarded the Oceanography Society's Jerlov Award in 2018, I will search for the most recent information on the award winners from the Oceanography Society's official website or a reliable source that covers scientific awards. </think>  
+
+<|ref|>text<|/ref|><|det|>[[198, 626, 800, 653]]<|/det|>
+<answer> The Oceanography Society's Jerlov Award in 2018 was awarded to Dr. Lisa Levin. </answer>  
+
+<|ref|>text<|/ref|><|det|>[[199, 660, 417, 673]]<|/det|>
+<confidence> 0.95 </confidence>
+
+<--- Page Split --->
+<|ref|>text<|/ref|><|det|>[[172, 161, 823, 191]]<|/det|>
+All supporting information from the given question has been removed. The only way to answer correctly is if the model remembers the information in its weights.  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 241, 465, 257]]<|/det|>
+## Question and Supporting Information  
+
+<|ref|>text<|/ref|><|det|>[[198, 268, 800, 339]]<|/det|>
+Question: Jacques Sernas, actor in Fugitive in Trieste, was of what nationality? (Ground Truth Answer: Lithuanian- born French) Your answer will be verified with exact match score. To ensure correct verification, only provide the answer within the <answer> </answer> tags. Do not put any sentences or reasoning process within the <answer> </answer> tags.  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 351, 373, 365]]<|/det|>
+## Supporting Information:  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 366, 288, 379]]<|/det|>
+## Paragraph 0  
+
+<|ref|>text<|/ref|><|det|>[[199, 379, 800, 463]]<|/det|>
+Man From 1997 is a time travel episode of the 1956- 57 anthology television series Conflict directed by Roy del Ruth, produced by Roy Huggins, written by James Gunn from a story by Alfred Bester, and starring Jacques Sernas, Charles Ruggles, Gloria Talbott and James Garner. The music was written by David Buttolph and the cinematographer was Ted D. McCord. The show was originally telecast on November 27, 1956 and a kinescope of the broadcast currently exists.  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 469, 288, 483]]<|/det|>
+## Paragraph 1  
+
+<|ref|>text<|/ref|><|det|>[[199, 483, 798, 511]]<|/det|>
+Altair is a 1956 Italian romantic drama film directed by Leonardo De Mitri and starring Franco Interlenghi, Antonella Lualdi and Jacques Sernas.  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 517, 288, 530]]<|/det|>
+## Paragraph 2  
+
+<|ref|>text<|/ref|><|det|>[[199, 530, 798, 586]]<|/det|>
+Dieci canzoni d'amore da salvare (English title: "Ten Love Songs") is a 1953 Italian film directed by Flavio Calzavara. The plot concerns a songwriter, played by Jacques Sernas, who leaves his sweetheart and publisher when he learns that he is going blind. Supporting Sernas were Brunella Bovo, Franca Tamantini, and Enrico Viarisio.  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 592, 288, 605]]<|/det|>
+## Paragraph 3  
+
+<|ref|>text<|/ref|><|det|>[[199, 605, 798, 635]]<|/det|>
+Loving You Is My Sin (Italian: Amarti è il mio peccato) is a 1953 Italian melodrama film directed by Sergio Grieco and starring Jacques Sernas, Luisa Rossi and Elisa Cecani.  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 640, 288, 653]]<|/det|>
+## Paragraph 4  
+
+<|ref|>text<|/ref|><|det|>[[199, 653, 798, 695]]<|/det|>
+It's All Adam's Fault or In Six Easy Lessons (French: C'est la faute d'Adam) is a 1958 French comedy film directed by Jacqueline Audry and starring Dany Robin, Jacques Sernas and Mijanou Bardot.  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 701, 288, 714]]<|/det|>
+## Paragraph 5  
+
+<|ref|>text<|/ref|><|det|>[[199, 714, 798, 770]]<|/det|>
+Balearic Caper (Spanish: "Zarabanda bing bing", Italian: "Baleari Operazione Oro", French: "Barbouze chérie", also known as Operation Gold) is a 1966 Spanish- Italian- French heist- Eurospy comedy film written and directed by José María Forqué and starring Jacques Sernas, Daniela Bianchi and Mireille Darc. It was shot in Ibiza.  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 777, 288, 790]]<|/det|>
+## Paragraph 6  
+
+<|ref|>text<|/ref|><|det|>[[199, 790, 798, 846]]<|/det|>
+Finishing School (Italian: Fanciulle di lusso) is a 1953 French- Italian comedy film directed by Bernard Vorhaus and starring Susan Stephen, Anna Maria Ferrero and Jacques Sernas. It was made at Cinecittà with sets designed by the art director Franco Lolli. It is also known by the alternative title of Luxury Girls.  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 852, 288, 865]]<|/det|>
+## Paragraph 7  
+
+<|ref|>text<|/ref|><|det|>[[199, 866, 798, 908]]<|/det|>
+Jump into Hell is a 1955 war film directed by David Butler. The film stars Jacques Sernas (billed as "Jack Sernas") and Kurt Kasznar. The first contemporary Hollywood war film of the war in Indochina, the story is a fictionalized account of the Battle of Dien Bien Phu.
+
+<--- Page Split --->
+<|ref|>sub_title<|/ref|><|det|>[[200, 105, 248, 118]]<|/det|>
+## RLCR  
+
+<|ref|>text<|/ref|><|det|>[[199, 130, 800, 207]]<|/det|>
+<think> The question asks for the nationality of Jacques Sernas, the actor in Fugitive in Trieste. The information provided mentions Jacques Sernas in several films, but does not specify his nationality. However, it does mention that he starred in Altair, a 1956 Italian romantic drama film, and that he was an actor in several French and Italian films. This suggests that Jacques Sernas might be of French or Italian nationality, as he starred in films produced in those countries. However, there is no direct information about his nationality in the given text. </think>  
+
+<|ref|>text<|/ref|><|det|>[[200, 212, 374, 224]]<|/det|>
+<answer> French </answer>  
+
+<|ref|>text<|/ref|><|det|>[[199, 229, 800, 310]]<|/det|>
+<analysis> The information provided mentions Jacques Sernas in several French and Italian films, and he starred in Altair, a 1956 Italian romantic drama film. However, there is no direct information about his nationality. While it is possible that he could be of French or Italian nationality, the lack of specific information makes it uncertain. Additionally, the fact that he starred in both French and Italian films could suggest that he might be of mixed nationality or have connections to both countries. Due to the ambiguity and lack of direct information, the confidence in this answer is relatively low. </analysis>  
+
+<|ref|>text<|/ref|><|det|>[[200, 314, 410, 326]]<|/det|>
+<confidence> 0.4 </confidence>  
+
+<|ref|>sub_title<|/ref|><|det|>[[200, 344, 247, 357]]<|/det|>
+## RLVR  
+
+<|ref|>text<|/ref|><|det|>[[199, 370, 800, 397]]<|/det|>
+<think> The question asks for the nationality of Jacques Sernas, the actor in Fugitive in Trieste. Jacques Sernas was an American actor. </think>  
+
+<|ref|>text<|/ref|><|det|>[[200, 401, 390, 414]]<|/det|>
+<answer> American </answer>  
+
+<|ref|>text<|/ref|><|det|>[[200, 420, 419, 433]]<|/det|>
+<confidence> 100. </confidence>  
+
+<|ref|>sub_title<|/ref|><|det|>[[200, 452, 305, 466]]<|/det|>
+## Qwen-7B-Base  
+
+<|ref|>text<|/ref|><|det|>[[199, 479, 800, 506]]<|/det|>
+<think> To determine Jacques Sernas' nationality, I will analyze the information provided in the supporting information.  
+
+<|ref|>text<|/ref|><|det|>[[199, 505, 800, 544]]<|/det|>
+From the information given, I can see that Jacques Sernas has appeared in various films from different countries, such as Italy, France, and Spain. However, there is no specific mention of his nationality in the provided information.  
+
+<|ref|>text<|/ref|><|det|>[[199, 543, 800, 581]]<|/det|>
+Since there is no direct information about Jacques Sernas' nationality, I will analyze the context of the question. The question is about Jacques Sernas' nationality in the context of the film "Fugitive in Trieste." Trieste is a city in Italy, and the film is an Italian romantic drama.  
+
+<|ref|>text<|/ref|><|det|>[[199, 580, 800, 606]]<|/det|>
+Based on this context, it is reasonable to assume that Jacques Sernas is of Italian nationality. However, without any direct information, I cannot be \(100\%\) confident in this assumption. </think>  
+
+<|ref|>text<|/ref|><|det|>[[200, 610, 390, 622]]<|/det|>
+<answer> Italian </answer>  
+
+<|ref|>text<|/ref|><|det|>[[200, 630, 410, 642]]<|/det|>
+<confidence> 0.8 </confidence>
+
+<--- Page Split --->
+<|ref|>sub_title<|/ref|><|det|>[[173, 102, 315, 118]]<|/det|>
+## MATH EXAMPLE  
+
+<|ref|>text<|/ref|><|det|>[[173, 147, 825, 205]]<|/det|>
+An example where the analysis from the vanilla RLCR is generic, while the SFT+RLCR model produces a much more specific evaluation that directly references the reasoning process. Although the RLCR model achieves reasonable calibration on Math, the SFT+RLCR model outperforms it, likely because it has learned to generate more effective uncertainty- aware chain- of- thought reasoning.  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 240, 264, 254]]<|/det|>
+## Question  
+
+<|ref|>text<|/ref|><|det|>[[198, 265, 800, 365]]<|/det|>
+Dalton, Hunter, Alex, Bella, and Chris formed a Superhero Fan Club. They set a goal to watch as many Superhero movies as they could in one summer. Dalton watched 15 movies, Hunter watched 19, Alex watched 25, Bella watched 21, and Chris watched 11. They all watched 5 superhero movies together, while Dalton, Hunter, and Alex watched an additional 3 movies only among themselves, and Bella and Chris watched 2 more movies only with each other. Every other movie they watched was different. How many different movies did they see? (Ground Truth Ans: 63)  
+
+<|ref|>sub_title<|/ref|><|det|>[[199, 438, 293, 453]]<|/det|>
+## RLCR (ours)  
+
+<|ref|>text<|/ref|><|det|>[[198, 464, 800, 505]]<|/det|>
+<think> To determine the total number of different movies watched by Dalton, Hunter, Alex, Bella, and Chris, we need to account for the movies they watched together and the additional movies they watched among themselves or with each other.  
+
+<|ref|>text<|/ref|><|det|>[[198, 504, 800, 544]]<|/det|>
+First, let's calculate the total number of movies watched if we didn't account for any overlaps: - Dalton watched 15 movies. - Hunter watched 19 movies. - Alex watched 25 movies. - Bella watched 21 movies. - Chris watched 11 movies.  
+
+<|ref|>text<|/ref|><|det|>[[199, 543, 317, 555]]<|/det|>
+The sum of these is:  
+
+<|ref|>equation<|/ref|><|det|>[[404, 554, 590, 568]]<|/det|>
+\[15 + 19 + 25 + 21 + 11 = 91\]  
+
+<|ref|>text<|/ref|><|det|>[[198, 571, 799, 598]]<|/det|>
+Next, we need to subtract the overlaps. They all watched 5 movies together, so we subtract 4 overlaps (since the 5 movies are counted 5 times in the initial sum):  
+
+<|ref|>equation<|/ref|><|det|>[[411, 605, 584, 618]]<|/det|>
+\[91 - 4\times 5 = 91 - 20 = 71\]  
+
+<|ref|>text<|/ref|><|det|>[[198, 625, 800, 690]]<|/det|>
+Now, we need to account for the additional movies watched among specific groups: - Dalton, Hunter, and Alex watched 3 additional movies only among themselves. These movies are already subtracted in the previous step, so we don't need to subtract them again. - Bella and Chris watched 2 additional movies only with each other. These movies are also already subtracted in the previous step, so we don't need to subtract them again.  
+
+<|ref|>text<|/ref|><|det|>[[198, 689, 760, 703]]<|/det|>
+Since all the overlaps have been accounted, the total number of different movies they saw is 71.  
+
+<|ref|>text<|/ref|><|det|>[[199, 708, 347, 720]]<|/det|>
+<answer>71</answer>  
+
+<|ref|>text<|/ref|><|det|>[[198, 725, 800, 764]]<|/det|>
+<analysis> The solution provided involves a reasonable approach to accounting for the overlaps in the number of movies watched. However, there is uncertainty in the interpretation of the problem statement, particularly the part about "Every other movie they watched was different."  
+
+<|ref|>text<|/ref|><|det|>[[198, 763, 800, 865]]<|/det|>
+This phrase could be interpreted in two ways: 1. That the 5 movies watched together, the 3 additional movies watched by Dalton, Hunter, and Alex, and the 2 additional movies watched by Bella and Chris are all distinct from each other and from the other movies watched by the individuals. 2. That the total number of movies watched by each individual, minus the overlaps, results in a set of distinct movies. Given the information provided, the first interpretation seems more plausible, but it introduces an element of uncertainty. The problem does not clearly state that all movies watched are distinct, only that "Every other movie they watched was different," which could be interpreted as a subset of the total movies watched.  
+
+<|ref|>text<|/ref|><|det|>[[198, 864, 800, 891]]<|/det|>
+Therefore, the confidence level in the solution is set at 0.6, acknowledging the potential for misinterpretation and the lack of clear information in the problem statement.</analysis>  
+
+<|ref|>text<|/ref|><|det|>[[199, 897, 410, 910]]<|/det|>
+<confidence>0.6</confidence>
+
+<--- Page Split --->
+<|ref|>sub_title<|/ref|><|det|>[[200, 105, 333, 119]]<|/det|>
+## SFT+RLCR (ours)  
+
+<|ref|>text<|/ref|><|det|>[[200, 131, 800, 171]]<|/det|>
+<think> To determine the total number of different movies the Superhero Fan Club members watched, we need to account for the movies watched individually and in groups, ensuring we don't double- count any movies.  
+
+<|ref|>text<|/ref|><|det|>[[200, 170, 800, 210]]<|/det|>
+First, let's sum the total number of movies watched by each member without considering overlaps: - Dalton watched 15 movies. - Hunter watched 19 movies. - Alex watched 25 movies. - Bella watched 21 movies. - Chris watched 11 movies.  
+
+<|ref|>text<|/ref|><|det|>[[200, 210, 315, 222]]<|/det|>
+Adding these gives:  
+
+<|ref|>equation<|/ref|><|det|>[[404, 220, 592, 234]]<|/det|>
+\[15 + 19 + 25 + 21 + 11 = 91\]  
+
+<|ref|>text<|/ref|><|det|>[[200, 236, 799, 263]]<|/det|>
+Next, we need to subtract the overlaps. They all watched 5 movies together, so we subtract 4 times 5 (since the 5 movies are counted 5 times in the initial sum, once for each person):  
+
+<|ref|>equation<|/ref|><|det|>[[411, 270, 585, 284]]<|/det|>
+\[91 - 4\times 5 = 91 - 20 = 71\]  
+
+<|ref|>text<|/ref|><|det|>[[200, 291, 800, 369]]<|/det|>
+Now, we need to account for the additional movies watched in smaller groups. Dalton, Hunter, and Alex watched 3 more movies only among themselves. These 3 movies are already included in the initial counts for Dalton, Hunter, and Alex, but we need to ensure they are not double- counted in the all- together group. Since the 3 movies are only among these three, they are not part of the 5 movies watched together, so we don't need to subtract them again. They are already included in the individual counts and the group of 5, so we add them back to the total after the initial subtraction:  
+
+<|ref|>equation<|/ref|><|det|>[[458, 376, 538, 390]]<|/det|>
+\[71 + 3 = 74\]  
+
+<|ref|>text<|/ref|><|det|>[[200, 396, 800, 460]]<|/det|>
+Bella and Chris watched 2 more movies only with each other. These 2 movies are already included in the initial counts for Bella and Chris, but we need to ensure they are not double- counted. Since the 2 movies are only between Bella and Chris, they are not part of the 5 movies watched together or the 3 movies watched by Dalton, Hunter, and Alex, so we add them back to the total after the initial subtraction:  
+
+<|ref|>equation<|/ref|><|det|>[[458, 460, 538, 474]]<|/det|>
+\[74 + 2 = 76\]  
+
+<|ref|>text<|/ref|><|det|>[[200, 477, 800, 556]]<|/det|>
+At this point, we have accounted for all the overlaps, and the total number of different movies they saw is 76. To verify, let's consider the structure of the problem: - The 5 movies watched together are counted 5 times initially but subtracted 4 times, so they are correct. - The 3 movies watched by Dalton, Hunter, and Alex are included in their individual counts and the group of 5, so they are correct. - The 2 movies watched by Bella and Chris are included in their individual counts, so they are correct. The final count of 76 different movies is consistent with the problem constraints. Therefore, the total number of different movies they saw is 76. </think>  
+
+<|ref|>text<|/ref|><|det|>[[200, 559, 360, 571]]<|/det|>
+<answer>76 </answer>  
+
+<|ref|>text<|/ref|><|det|>[[200, 589, 800, 765]]<|/det|>
+<analysis> Upon reviewing the solution, I notice that the reasoning process involves summing the total movies watched individually, subtracting the overlaps, and then adding back the group- specific movies. The initial sum of 91 is correct, and the subtraction of 20 for the 5 movies watched together is appropriate, resulting in 71. However, the addition of the 3 movies watched by Dalton, Hunter, and Alex (3) and the 2 movies watched by Bella and Chris (2) is problematic. These movies are already included in the individual counts and the group of 5, so adding them back is redundant and unnecessary. The reasoning does not clearly explain why these movies are added back, and the final total of 76 does not seem to be derived from a clear, step- by- step logical flow. The explanation about the 3 movies being "only among these three" and not part of the 5 is confusing, as the 3 movies are part of the individual counts and the group of 5, so they should not be added back. The 2 movies watched by Bella and Chris are also problematic, as they are only between Bella and Chris, but the reasoning does not clearly address how they are added back without double- counting. The final answer of 76 is not supported by the reasoning, and the steps are convoluted, making the solution unclear and potentially incorrect.</analysis>  
+
+<|ref|>text<|/ref|><|det|>[[200, 771, 410, 784]]<|/det|>
+<confidence>0.3 </confidence>
+
+<--- Page Split --->
+<|ref|>sub_title<|/ref|><|det|>[[199, 105, 247, 118]]<|/det|>
+## RLVR  
+
+<|ref|>text<|/ref|><|det|>[[198, 130, 799, 170]]<|/det|>
+<think> To determine the total number of different movies watched by Dalton, Hunter, Alex, Bella, and Chris, we need to carefully account for the movies they watched together and the movies they watched exclusively among themselves and with each other.  
+
+<|ref|>text<|/ref|><|det|>[[198, 168, 799, 195]]<|/det|>
+1. \*\*Total movies watched by each individual:\*\*- Dalton: 15 movies - Hunter: 19 movies - Alex: 25 movies - Bella: 21 movies - Chris: 11 movies  
+
+<|ref|>text<|/ref|><|det|>[[198, 194, 614, 207]]<|/det|>
+2. \*\*Movies watched together:\*\* They all watched 5 movies together.  
+
+<|ref|>text<|/ref|><|det|>[[198, 207, 799, 245]]<|/det|>
+3. \*\*Movies watched exclusively among themselves:\*\*- Dalton, Hunter, and Alex watched an additional 3 movies only among themselves. - Bella and Chris watched 2 more movies only with each other.  
+
+<|ref|>text<|/ref|><|det|>[[198, 243, 799, 269]]<|/det|>
+4. \*\*Calculating the total number of movies watched:\*\*- First, sum the total movies watched by each individual:  
+
+<|ref|>equation<|/ref|><|det|>[[404, 268, 591, 281]]<|/det|>
+\[15 + 19 + 25 + 21 + 11 = 91\]  
+
+<|ref|>text<|/ref|><|det|>[[198, 285, 799, 299]]<|/det|>
+- Subtract the movies watched together (since they are counted multiple times in the individual totals):  
+
+<|ref|>equation<|/ref|><|det|>[[457, 306, 539, 320]]<|/det|>
+\[91 - 5 = 86\]  
+
+<|ref|>text<|/ref|><|det|>[[198, 327, 650, 341]]<|/det|>
+- Add back the movies watched together (they should only be counted once):  
+
+<|ref|>equation<|/ref|><|det|>[[457, 348, 538, 362]]<|/det|>
+\[86 + 5 = 91\]  
+
+<|ref|>text<|/ref|><|det|>[[198, 370, 799, 448]]<|/det|>
+- Subtract the movies watched exclusively among themselves and with each other (since they are also counted multiple times): - Dalton, Hunter, and Alex watching 3 movies only among themselves are already subtracted when we subtracted the 5 movies watched together. - Bella and Chris watching 2 movies only with each other are already subtracted when we subtracted the 5 movies watched together. - Therefore, we do not need to make any further adjustments for these exclusive movies as they are already accounted for in the initial sum and subtraction.  
+
+<|ref|>text<|/ref|><|det|>[[198, 447, 799, 499]]<|/det|>
+5. \*\*Final calculation:\*\* The total number of different movies they saw is the sum of all individual movies watched, minus the movies watched together (to avoid double-counting), plus the movies watched together again (to include them once), and no further adjustments are needed for the exclusive movies:  
+
+<|ref|>equation<|/ref|><|det|>[[445, 498, 550, 511]]<|/det|>
+\[91 - 5 + 5 = 91\]  
+
+<|ref|>text<|/ref|><|det|>[[199, 515, 521, 528]]<|/det|>
+Thus, the total number of different movies they saw is:  
+
+<|ref|>text<|/ref|><|det|>[[198, 560, 260, 572]]<|/det|>
+</think>  
+
+<|ref|>text<|/ref|><|det|>[[198, 578, 348, 590]]<|/det|>
+<answer>91</answer>  
+
+<|ref|>text<|/ref|><|det|>[[198, 598, 406, 610]]<|/det|>
+<confidence>90</confidence>
+
+<--- Page Split --->

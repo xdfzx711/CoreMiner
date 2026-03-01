@@ -1,0 +1,9 @@
+{
+  "source_file": "AgentDojo: A Dynamic Environment to Evaluate Attacks and Defenses for LLM Agents",
+  "title": "AgentDojo: A Dynamic Environment to Evaluate Attacks and Defenses for LLM Agents",
+  "contributions_summary": "First, the authors introduce AgentDojo, a dynamic and extensible evaluation framework for measuring the robustness of AI agents against prompt injection attacks in real-world tool-execution scenarios, incorporating 97 realistic tasks and 629 security test cases. Through systematic evaluation of state-of-the-art tool-calling LLMs, they reveal that agents frequently fail even without attacks, and existing defenses offer only partial protection, highlighting critical gaps in current approaches. The framework enables adaptive attack and defense experimentation, establishing a live benchmark that quantifies both the limitations of today’s agents and the potential for future innovations in reliable, secure agent design.",
+  "extraction_timestamp": "2026-02-28T03:54:56.539831",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 1331,
+  "completion_tokens": 127
+}

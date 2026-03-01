@@ -1,0 +1,11 @@
+{
+  "source_file": "agentPostion_det.mmd",
+  "title": "Zhaorun Chen \\(^{1*}\\) , Zhen Xiang \\(^{2}\\) , Chaowei Xiao \\(^{3}\\) , Dawn Song \\(^{4}\\) , Bo Li \\(^{1,2*}\\) \\(^{1}\\) University of Chicago, \\(^{2}\\) University of Illinois, Urbana-Champaign \\(^{3}\\) University of Wisconsin, Madison \\(^{4}\\) University of California, Berkeley",
+  "contributions_summary": "AGENTPOISON introduces the first backdoor attack targeting RAG-based LLM agents by poisoning their memory or knowledge base with minimal malicious instances (<0.1% poison rate), using a novel constrained optimization framework to generate stealthy, coherent triggers that map queries into a compact, unique region of the embedding space—ensuring high retrieval probability of poisoned demonstrations while preserving benign performance (≤1% degradation). Unlike prior attacks, AGENTPOISON requires no model retraining, achieves ≥80% attack success rate across three real-world agents (autonomous driving, QA, healthcare), and exhibits strong transferability across diverse RAG embedders, including black-box models like OpenAI ADA, while evading defenses based on perplexity filtering and rephrasing through semantic coherence.",
+  "extraction_timestamp": "2026-02-28T02:13:03.968657",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 35826,
+  "completion_tokens": 154,
+  "input_length": 97141,
+  "preprocessing_mode": "none"
+}

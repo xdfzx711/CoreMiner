@@ -1,0 +1,11 @@
+{
+  "source_file": "Imperceptible Jailbreaking against LLM.mmd",
+  "title": "IMPERCEPTIBLE JAILBREAKING AGAINST LARGE LANGUAGE MODELS",
+  "contributions_summary": "This paper introduces imperceptible jailbreaks against large language models by exploiting Unicode variation selectors—invisible characters that alter tokenization without changing visual appearance—enabling adversarial suffixes to bypass safety alignments while leaving prompts visually identical to their original malicious forms. To optimize these suffixes, the authors propose a chain-of-search pipeline that iteratively refines and reuses successful combinations of invisible suffixes and target-start tokens across multiple rounds, bootstrapping from prior successes to improve efficiency and generalization. Experiments demonstrate that this method achieves high attack success rates (up to 100%) across four aligned LLMs without visible modifications, and crucially, extends effectively to prompt injection attacks, revealing a previously overlooked vulnerability in LLM safety mechanisms rooted in tokenization-level invisibility.",
+  "extraction_timestamp": "2026-02-28T02:10:55.442572",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 15188,
+  "completion_tokens": 158,
+  "input_length": 55541,
+  "preprocessing_mode": "none"
+}

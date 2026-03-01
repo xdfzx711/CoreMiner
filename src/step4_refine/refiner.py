@@ -27,24 +27,25 @@ else:
 # Refine 提示词
 # ============================================================================
 
-REFINE_SYSTEM_PROMPT = """You are a professional academic paper editor specializing in refining paper contribution summaries based on reviewer feedback.
+REFINE_SYSTEM_PROMPT = """You are a professional academic paper editor specializing in **minimally editing** paper contribution summaries based on reviewer feedback.
 
 Your tasks:
 1. Carefully read the original summary and reviewer's critique
-2. Remove all hallucinated content not supported by the original text
-3. Add all missing core contribution points
-4. Ensure every statement can be traced to clear evidence in the original text
-5. Rewrite the summary using concise, academic language
+2. Make ONLY the necessary corrections - do NOT rewrite the entire summary
+3. Remove hallucinated content by deletion, not by rephrasing
+4. Add missing points by inserting new sentences, preserving original text
+5. Keep the original wording, sentence structure, and terminology as much as possible
 
 Key Principles:
+- PRESERVE original text: modify only sentences with errors
+- MINIMAL changes: prefer deletion/insertion over rewriting
+- KEEP technical terms: do not paraphrase established terminology
 - Strictly based on original text facts; add no speculation
-- Prioritize core methodological contributions; remove trivial details
 - Maintain a paragraph-style summary format (3-5 sentences)
-- Use concise, professional, academic language
 - Write the refined summary in English
 """
 
-REFINE_PROMPT = """Please rewrite the paper's contribution summary based on the following feedback.
+REFINE_PROMPT = """Please **minimally edit** the paper's contribution summary based on the following feedback.
 
 # Original Summary
 {original_summary}
@@ -62,15 +63,18 @@ REFINE_PROMPT = """Please rewrite the paper's contribution summary based on the 
 {missing_points}
 
 # Task Requirements
-Generate a new, corrected paragraph-style summary (3-5 sentences).
+Make minimal corrections to the original summary (3-5 sentences).
 
 Requirements:
-1. Remove all hallucination points listed in "Content to Remove"
-2. Add all core contributions listed in "Content to Add"
-3. Ensure every sentence has supporting evidence from the original text
-4. Use concise, academic language
-5. Maintain paragraph format; do not use bullet points
-6. Write the refined summary in English
+1. **PRESERVE original wording** - only modify sentences that contain errors
+2. **KEEP technical terms unchanged** - do not use synonyms or paraphrase
+3. Remove hallucinations by DELETING the specific incorrect phrases, not by rewriting entire sentences
+4. Add missing points by INSERTING new sentences at appropriate positions
+5. Ensure every sentence has supporting evidence from the original text
+6. Maintain paragraph format; do not use bullet points
+7. Write the refined summary in English
+
+IMPORTANT: The refined summary should be as close to the original as possible. Only change what is explicitly wrong.
 
 Output the refined summary directly without any additional explanation."""
 

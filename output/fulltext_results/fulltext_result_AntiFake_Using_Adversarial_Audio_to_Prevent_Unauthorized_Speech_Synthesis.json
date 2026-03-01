@@ -1,0 +1,11 @@
+{
+  "source_file": "AntiFake_det.mmd",
+  "title": "AntiFake: Using Adversarial Audio to Prevent Unauthorized Speech Synthesis",
+  "contributions_summary": "AntiFake introduces a proactive defense against unauthorized speech synthesis by deploying stealthy adversarial perturbations to speaker embeddings, ensuring that synthesized DeepFake audio no longer resembles the victim’s voice while remaining imperceptibly natural to human listeners. Through an ensemble of diverse speaker encoders and a weighted segment-based optimization, it achieves over 95% protection rate against five state-of-the-art synthesizers—including black-box commercial models—by disrupting transferable acoustic features without requiring knowledge of the attacker’s model. The system integrates a human-in-the-loop workflow using the Analytic Hierarchy Process to balance computational embedding deviation with subjective human judgment of speaker dissimilarity, minimizing user effort while maximizing protection efficacy, and is validated by usability tests showing high system usability (SUS score: 87.6) and preserved audio quality (MOS: 3.54).",
+  "extraction_timestamp": "2026-02-28T02:10:25.856284",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 33222,
+  "completion_tokens": 173,
+  "input_length": 115130,
+  "preprocessing_mode": "none"
+}

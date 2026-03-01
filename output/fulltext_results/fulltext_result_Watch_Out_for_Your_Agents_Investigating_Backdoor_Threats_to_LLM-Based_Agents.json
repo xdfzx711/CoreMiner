@@ -1,0 +1,11 @@
+{
+  "source_file": "Watch out for your agents_det.mmd",
+  "title": "Watch Out for Your Agents! Investigating Backdoor Threats to LLM-Based Agents",
+  "contributions_summary": "This paper introduces the first comprehensive investigation of backdoor attacks on LLM-based agents, revealing that their multi-step reasoning and environmental interaction enable fundamentally new and more covert attack vectors beyond traditional LLM backdoors. The authors formally define three distinct attack categories—Query-Attack (trigger in user input), Observation-Attack (trigger in environment feedback), and Thought-Attack (malicious intermediate reasoning with unchanged final output)—and demonstrate their high effectiveness through extensive experiments on AgentInstruct and ToolBench, achieving up to 80% attack success rates with minimal poisoning. Crucially, they show that existing textual backdoor defenses fail against these agent-specific threats, particularly Thought-Attack, which leaves no trace in the final output, thereby exposing a critical and previously overlooked security gap that demands new, targeted defense mechanisms for agent systems.",
+  "extraction_timestamp": "2026-02-28T02:12:36.199667",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 30391,
+  "completion_tokens": 165,
+  "input_length": 89580,
+  "preprocessing_mode": "none"
+}

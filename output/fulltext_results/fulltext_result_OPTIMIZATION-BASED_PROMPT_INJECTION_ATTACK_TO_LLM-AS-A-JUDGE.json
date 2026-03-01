@@ -1,0 +1,11 @@
+{
+  "source_file": "OPTIMIZATION-BASED PROMPT INJECTION ATTACK TO LLM-AS-A-JUDGE_det.mmd",
+  "title": "OPTIMIZATION-BASED PROMPT INJECTION ATTACK TO LLM-AS-A-JUDGE",
+  "contributions_summary": "JudgeDecceiver introduces a novel optimization-based prompt injection attack tailored for LLM-as-a-Judge systems, automating the generation of adversarial sequences through a multi-objective loss function that combines target-aligned generation, target-enhancement, and adversarial perplexity losses to precisely manipulate evaluation outcomes. Unlike manual or gradient-based jailbreaking methods, it leverages a shadow dataset synthesized from public LLMs to simulate realistic evaluation environments despite limited attacker knowledge, enabling robust, transferable attacks across diverse benchmarks like MT-Bench and LLMBar. The method achieves state-of-the-art attack success rates (up to 93.2%) and maintains high positional consistency (up to 86.6%) by optimizing adversarial sequences via iterative token substitution and position-aware training, effectively bypassing inherent LLM biases and detection defenses. Extensive ablation studies validate the necessity and synergy of each loss component and demonstrate superior performance over handcrafted prompts and GCG, exposing critical vulnerabilities in current LLM evaluation frameworks.",
+  "extraction_timestamp": "2026-02-28T02:11:21.706572",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 26421,
+  "completion_tokens": 201,
+  "input_length": 74940,
+  "preprocessing_mode": "none"
+}

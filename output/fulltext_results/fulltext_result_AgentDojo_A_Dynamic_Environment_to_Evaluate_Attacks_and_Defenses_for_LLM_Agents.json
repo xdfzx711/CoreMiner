@@ -1,0 +1,11 @@
+{
+  "source_file": "AgentDojo.mmd",
+  "title": "AgentDojo: A Dynamic Environment to Evaluate Attacks and Defenses for LLM Agents",
+  "contributions_summary": "AgentDojo introduces a dynamic, extensible benchmark framework for evaluating the utility and security of LLM agents in realistic, stateful environments where external tools return untrusted data, addressing the critical gap left by static benchmarks that fail to capture adversarial tool-call interactions. It features 97 realistic tasks across four domains (email, banking, travel, Slack) and 629 security test cases, enabling rigorous measurement of both benign performance and resilience to prompt injection attacks through formal, environment-state-based utility and attack success metrics—avoiding LLM-based evaluators vulnerable to hijacking. The framework reveals that state-of-the-art LLMs achieve less than 69% benign utility and are highly susceptible to adaptive attacks, while existing defenses like tool filtering reduce attack success to 6.8% but fail when tool usage cannot be pre-planned, exposing fundamental limitations in current agent architectures. By supporting modular agent pipelines, customizable attacks, and scalable task definitions, AgentDojo establishes a living benchmark that fosters the development of robust, reliable AI agents through quantifiable, reproducible evaluation under adversarial conditions.",
+  "extraction_timestamp": "2026-02-28T02:10:13.155808",
+  "model_used": "qwen3-next-80b-a3b-instruct",
+  "prompt_tokens": 16733,
+  "completion_tokens": 224,
+  "input_length": 61052,
+  "preprocessing_mode": "none"
+}
